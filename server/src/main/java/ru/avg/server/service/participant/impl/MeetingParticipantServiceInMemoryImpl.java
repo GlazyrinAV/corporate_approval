@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.avg.server.exception.meeting.MeetingTypeNotFound;
 import ru.avg.server.model.dto.MeetingDto;
 import ru.avg.server.model.dto.MeetingParticipantDto;
+import ru.avg.server.model.dto.ParticipantDto;
 import ru.avg.server.model.dto.TopicDto;
 import ru.avg.server.model.dto.mapper.MeetingParticipantMapper;
 import ru.avg.server.model.dto.mapper.TopicMapper;
@@ -74,6 +75,7 @@ public class MeetingParticipantServiceInMemoryImpl implements MeetingParticipant
                                 .findFirst()
                                 .orElseThrow(() -> new MeetingTypeNotFound(meetingDto.getType())))
                 .stream()
+                .filter(ParticipantDto::getIsActive)
                 .map(meetingParticipantMapper::fromParticipantDto)
                 .toList();
         List<MeetingParticipantDto> result = new ArrayList<>();

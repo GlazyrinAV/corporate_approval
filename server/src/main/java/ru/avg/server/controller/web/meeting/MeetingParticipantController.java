@@ -20,6 +20,14 @@ public class MeetingParticipantController {
 
     private final MeetingParticipantService meetingParticipantService;
 
+    @GetMapping("/potentials")
+    @ResponseStatus(HttpStatus.OK)
+    public List<MeetingParticipantDto> findPotentialParticipants(@PathVariable("companyId") Integer companyId,
+                                                                 @PathVariable("meetingId") Integer meetingId) {
+        log.info("show potential participants for meeting: {}", meetingId);
+        return meetingParticipantService.findPotential(meetingId);
+    }
+
     @GetMapping("/")
     @ResponseStatus(HttpStatus.OK)
     public List<MeetingParticipantDto> findParticipants(@PathVariable("companyId") Integer companyId,
