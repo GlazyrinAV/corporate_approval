@@ -8,7 +8,7 @@ public interface CompanyService {
 
     CompanyDto save(CompanyDto companyDto);
 
-    CompanyDto edit(Integer companyId, CompanyDto companyDto);
+    CompanyDto update(Integer companyId, CompanyDto companyDto);
 
     void delete(Integer companyId);
 

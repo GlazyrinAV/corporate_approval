@@ -27,7 +27,7 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public CompanyDto edit(Integer id, CompanyDto companyDto) {
+    public CompanyDto update(Integer id, CompanyDto companyDto) {
         Company company = storage.findById(id)
                 .orElseThrow(() -> new CompanyNotFound(id));
         Company newCompany = companyMapper.fromDto(companyDto);
