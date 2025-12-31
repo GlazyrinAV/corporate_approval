@@ -14,6 +14,8 @@ import java.util.List;
 /**
  * REST controller for managing participants within a company context.
  * All operations are scoped by {companyId} to enforce access control and data ownership.
+ * Provides standard CRUD endpoints for participant management including creation, retrieval,
+ * partial update, and deletion of participants.
  */
 @RestController
 @RequestMapping("/approval/{companyId}/participant")
@@ -24,10 +26,11 @@ public class ParticipantController {
     private final ParticipantService participantService;
 
     /**
-     * Retrieves all participants for a given company.
+     * Retrieves all participants associated with a specific company.
+     * This endpoint returns a complete list of participants for the given company.
      *
-     * @param companyId the ID of the company
-     * @return ResponseEntity with OK status and list of ParticipantDto
+     * @param companyId the ID of the company for which to retrieve all participants
+     * @return ResponseEntity with HTTP 200 OK status containing a list of ParticipantDto objects
      */
     @GetMapping
     public ResponseEntity<List<ParticipantDto>> findAll(@PathVariable Integer companyId) {
@@ -37,11 +40,13 @@ public class ParticipantController {
     }
 
     /**
-     * Creates a new participant for a given company.
+     * Creates a new participant within the specified company.
+     * The participant data is validated using Jakarta Validation annotations before being persisted.
+     * If validation fails, a MethodArgumentNotValidException will be thrown.
      *
-     * @param companyId       the ID of the company
-     * @param participantDto  the participant data transfer object
-     * @return ResponseEntity with CREATED status and the saved ParticipantDto
+     * @param companyId      the ID of the company for which the participant is being created
+     * @param participantDto the ParticipantDto containing the data for the new participant
+     * @return ResponseEntity with HTTP 201 CREATED status and the saved ParticipantDto including generated ID
      */
     @PostMapping
     public ResponseEntity<ParticipantDto> save(
@@ -53,11 +58,12 @@ public class ParticipantController {
     }
 
     /**
-     * Retrieves a specific participant by ID within a company.
+     * Retrieves a specific participant by their unique identifier within the context of a company.
+     * The company ID is used for routing and access control, ensuring proper scoping.
      *
-     * @param companyId       the ID of the company
-     * @param participantId   the ID of the participant
-     * @return ResponseEntity with OK status and the ParticipantDto
+     * @param companyId     the ID of the company to which the participant belongs
+     * @param participantId the ID of the participant to retrieve
+     * @return ResponseEntity with HTTP 200 OK status and the requested ParticipantDto
      */
     @GetMapping("/{participantId}")
     public ResponseEntity<ParticipantDto> findById(
@@ -69,12 +75,14 @@ public class ParticipantController {
     }
 
     /**
-     * Partially updates an existing participant.
+     * Partially updates an existing participant identified by ID within the company context.
+     * Only the fields provided in the request body will be updated, leaving others unchanged.
+     * The input is validated before processing.
      *
-     * @param companyId        the ID of the company
-     * @param participantId    the ID of the participant to update
-     * @param newParticipantDto the updated fields of the participant
-     * @return ResponseEntity with OK status and the updated ParticipantDto
+     * @param companyId         the ID of the company to which the participant belongs
+     * @param participantId     the ID of the participant to update
+     * @param newParticipantDto the ParticipantDto containing the fields to update
+     * @return ResponseEntity with HTTP 200 OK status and the updated ParticipantDto
      */
     @PatchMapping("/{participantId}")
     public ResponseEntity<ParticipantDto> update(
@@ -87,11 +95,13 @@ public class ParticipantController {
     }
 
     /**
-     * Deletes a participant by ID.
+     * Deletes a participant identified by their ID within the company context.
+     * This is a soft or hard delete operation depending on the service implementation.
+     * After successful deletion, returns no content.
      *
-     * @param companyId      the ID of the company
-     * @param participantId  the ID of the participant to delete
-     * @return ResponseEntity with NO_CONTENT status
+     * @param companyId     the ID of the company to which the participant belongs
+     * @param participantId the ID of the participant to delete
+     * @return ResponseEntity with HTTP 204 NO_CONTENT status and nobody
      */
     @DeleteMapping("/{participantId}")
     public ResponseEntity<Void> removeById(

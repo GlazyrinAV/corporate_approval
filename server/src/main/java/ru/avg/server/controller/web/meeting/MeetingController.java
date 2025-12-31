@@ -14,6 +14,7 @@ import java.util.List;
 /**
  * REST controller for managing meetings within a company context.
  * All endpoints are scoped by {companyId} to ensure resource ownership and access control.
+ * Provides standard CRUD operations for meetings including creation, retrieval, partial update, and deletion.
  */
 @RestController
 @RequestMapping("/approval/{companyId}/meeting")
@@ -24,10 +25,11 @@ public class MeetingController {
     private final MeetingService meetingService;
 
     /**
-     * Retrieves all meetings for a given company.
+     * Retrieves all meetings associated with a specific company.
+     * This endpoint returns a list of all meetings for the given company identifier.
      *
-     * @param companyId the ID of the company
-     * @return list of MeetingDto objects
+     * @param companyId the ID of the company for which to retrieve all meetings
+     * @return ResponseEntity containing a list of MeetingDto objects with HTTP status 200 OK
      */
     @GetMapping
     public ResponseEntity<List<MeetingDto>> findAll(@PathVariable Integer companyId) {
@@ -37,11 +39,12 @@ public class MeetingController {
     }
 
     /**
-     * Retrieves a specific meeting by ID within the context of a company.
+     * Retrieves a specific meeting by its unique identifier within the context of a company.
+     * The company ID is used for routing and access control purposes.
      *
-     * @param companyId  the ID of the company
-     * @param meetingId  the ID of the meeting
-     * @return the requested MeetingDto
+     * @param companyId the ID of the company to which the meeting belongs
+     * @param meetingId the ID of the meeting to retrieve
+     * @return ResponseEntity containing the requested MeetingDto with HTTP status 200 OK
      */
     @GetMapping("/{meetingId}")
     public ResponseEntity<MeetingDto> findById(
@@ -53,11 +56,13 @@ public class MeetingController {
     }
 
     /**
-     * Creates a new meeting for a company.
+     * Creates a new meeting for a specific company.
+     * The meeting data is validated using Jakarta Validation annotations before persistence.
+     * If validation fails, a MethodArgumentNotValidException will be thrown.
      *
-     * @param companyId   the ID of the company
-     * @param meetingDto  the meeting data transfer object
-     * @return the created MeetingDto with assigned ID
+     * @param companyId  the ID of the company for which the meeting is being created
+     * @param meetingDto the MeetingDto containing the data for the new meeting
+     * @return ResponseEntity containing the created MeetingDto with assigned ID and HTTP status 201 Created
      */
     @PostMapping
     public ResponseEntity<MeetingDto> save(
@@ -69,12 +74,14 @@ public class MeetingController {
     }
 
     /**
-     * Updates an existing meeting partially.
+     * Partially updates an existing meeting identified by its ID within the context of a company.
+     * Only the fields provided in the request body will be updated.
+     * The input is validated before processing.
      *
-     * @param companyId     the ID of the company
+     * @param companyId     the ID of the company to which the meeting belongs
      * @param meetingId     the ID of the meeting to update
-     * @param newMeetingDto the updated fields of the meeting
-     * @return the updated MeetingDto
+     * @param newMeetingDto the MeetingDto containing the fields to update
+     * @return ResponseEntity containing the updated MeetingDto with HTTP status 200 OK
      */
     @PatchMapping("/{meetingId}")
     public ResponseEntity<MeetingDto> update(
@@ -87,10 +94,12 @@ public class MeetingController {
     }
 
     /**
-     * Deletes a meeting by ID.
+     * Deletes a meeting identified by its ID within the context of a company.
+     * After successful deletion, returns HTTP 204 No Content.
      *
-     * @param companyId the ID of the company
+     * @param companyId the ID of the company to which the meeting belongs
      * @param meetingId the ID of the meeting to delete
+     * @return ResponseEntity with no content and HTTP status 204 No Content
      */
     @DeleteMapping("/{meetingId}")
     public ResponseEntity<Void> remove(

@@ -14,6 +14,7 @@ import java.util.List;
 /**
  * REST controller for managing company resources.
  * Provides CRUD operations with proper HTTP semantics and logging.
+ * All endpoints are mapped under the base path "/approval/company".
  */
 @RestController
 @RequestMapping("/approval/company")
@@ -24,10 +25,12 @@ public class CompanyController {
     private final CompanyService companyService;
 
     /**
-     * Creates a new company.
+     * Creates a new company based on the provided CompanyDto.
+     * The input is validated using Jakarta Validation annotations.
+     * If validation fails, a MethodArgumentNotValidException will be thrown.
      *
-     * @param companyDto the company data transfer object
-     * @return ResponseEntity with CREATED status and the saved CompanyDto
+     * @param companyDto the CompanyDto containing the data for the new company
+     * @return ResponseEntity containing the saved CompanyDto with HTTP status 201 Created
      */
     @PostMapping
     public ResponseEntity<CompanyDto> save(@RequestBody @Valid CompanyDto companyDto) {
@@ -37,10 +40,10 @@ public class CompanyController {
     }
 
     /**
-     * Retrieves a company by its ID.
+     * Retrieves a company by its unique identifier.
      *
-     * @param companyId the ID of the company
-     * @return ResponseEntity with OK status and the CompanyDto
+     * @param companyId the ID of the company to retrieve
+     * @return ResponseEntity containing the CompanyDto with HTTP status 200 OK
      */
     @GetMapping("/{companyId}")
     public ResponseEntity<CompanyDto> findById(@PathVariable Integer companyId) {
@@ -50,9 +53,9 @@ public class CompanyController {
     }
 
     /**
-     * Retrieves all companies.
+     * Retrieves a list of all existing companies.
      *
-     * @return ResponseEntity with OK status and list of CompanyDto
+     * @return ResponseEntity containing a list of CompanyDto objects with HTTP status 200 OK
      */
     @GetMapping
     public ResponseEntity<List<CompanyDto>> findAll() {
@@ -62,11 +65,13 @@ public class CompanyController {
     }
 
     /**
-     * Partially updates an existing company.
+     * Partially updates an existing company using the provided fields in CompanyDto.
+     * Only the fields present in the request body will be updated.
+     * The input is validated before processing.
      *
      * @param companyId the ID of the company to update
-     * @param company   the updated fields of the company
-     * @return ResponseEntity with OK status and the updated CompanyDto
+     * @param company   the CompanyDto containing the fields to update
+     * @return ResponseEntity containing the updated CompanyDto with HTTP status 200 OK
      */
     @PatchMapping("/{companyId}")
     public ResponseEntity<CompanyDto> update(
@@ -78,10 +83,11 @@ public class CompanyController {
     }
 
     /**
-     * Deletes a company by its ID.
+     * Deletes a company identified by its ID.
+     * After successful deletion, returns HTTP 204 No Content.
      *
      * @param companyId the ID of the company to delete
-     * @return ResponseEntity with NO_CONTENT status
+     * @return ResponseEntity with no content and HTTP status 204 No Content
      */
     @DeleteMapping("/{companyId}")
     public ResponseEntity<Void> delete(@PathVariable Integer companyId) {
