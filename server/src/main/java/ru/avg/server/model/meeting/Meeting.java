@@ -10,32 +10,45 @@ import ru.avg.server.model.participant.Participant;
 
 import java.time.LocalDate;
 
+/**
+ * Entity representing a meeting within the system.
+ * Maps to the 'meeting' database table.
+ *
+ * Key attributes:
+ * - id: Auto-generated unique identifier
+ * - company: The company organizing the meeting (foreign key)
+ * - type: Classification of the meeting (e.g., Annual, Extraordinary)
+ * - date: The date when the meeting takes place
+ * - address: Physical location of the meeting
+ * - secretary and chairman: Key participants assigned to roles
+ *
+ * Ensures referential integrity through relationships with Company and Participant entities.
+ */
 @Entity
+@Table(name = "meeting")
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "meeting")
+@AllArgsConstructor
 public class Meeting {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+    @Column(name = "id", nullable = false, updatable = false)
     private Integer id;
 
     @ManyToOne
-    @JoinColumn(name = "company_id")
+    @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    @Column(name = "type")
+    @Column(name = "type", nullable = false)
     @Enumerated(EnumType.STRING)
     private MeetingType type;
 
-    @Column(name = "date")
-    @Temporal(TemporalType.DATE)
+    @Column(name = "date", nullable = false)
     private LocalDate date;
 
-    @Column(name = "address")
+    @Column(name = "address", nullable = false, length = 512)
     private String address;
 
     @ManyToOne

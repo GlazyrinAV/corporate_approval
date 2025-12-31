@@ -64,8 +64,8 @@ public class ParticipantServiceImpl implements ParticipantService {
             }
         }
 
-        if (newParticipant.getIsACtive() != null) {
-            participant.setIsACtive(newParticipant.getIsACtive());
+        if (newParticipant.getIsActive() != null) {
+            participant.setIsActive(newParticipant.getIsActive());
         }
 
         return participantMapper.toDto(participantRepository.save(participant));
@@ -81,7 +81,7 @@ public class ParticipantServiceImpl implements ParticipantService {
         } else {
             Participant participant = participantRepository.findById(participantId)
                     .orElseThrow(() -> new ParticipantNotFound(participantId));
-            participant.setIsACtive(false);
+            participant.setIsActive(false);
         }
     }
 

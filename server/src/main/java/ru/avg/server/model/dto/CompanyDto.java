@@ -8,6 +8,17 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.avg.server.utils.validator.inn.Inn;
 
+/**
+ * Data Transfer Object for Company entity.
+ * Used for creating and updating company records via API.
+ *
+ * Fields:
+ * - id: Optional, assigned by the system on creation
+ * - title: Required, business name of the company
+ * - inn: Required, 10-digit tax identification number
+ * - companyType: Required, must match existing CompanyType
+ * - hasBoardOfDirectors: Required, indicates governance structure
+ */
 @Data
 @Builder
 @AllArgsConstructor
@@ -16,15 +27,15 @@ public class CompanyDto {
 
     private Integer id;
 
-    @NotBlank(message = "Наименование не должно быть пустым")
+    @NotBlank(message = "Company title must not be blank")
     private String title;
 
-    @Inn(message = "ИНН должен состоять из 10 цифр")
+    @Inn
     private Long inn;
 
-    @NotBlank(message = "Тип компании должен быть заполнен")
+    @NotBlank(message = "Company type must not be blank")
     private String companyType;
 
-    @NotNull(message = "Необходимо указать наличие совета директоров")
-    private Boolean hasBoardOfDirectors = false;
+    @NotNull(message = "Presence of board of directors must be specified")
+    private Boolean hasBoardOfDirectors;
 }
