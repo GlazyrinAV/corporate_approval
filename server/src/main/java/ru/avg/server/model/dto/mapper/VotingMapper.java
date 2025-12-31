@@ -31,7 +31,7 @@ public class VotingMapper {
                 .id(votingDto.getId())
                 .isAccepted(votingDto.isAccepted())
                 .topic(topicRepository.findById(votingDto.getTopicId())
-                        .orElseThrow(TopicNotFound::new))
+                        .orElseThrow(() -> new TopicNotFound(votingDto.getTopicId())))
                 .voters(voters)
                 .build();
     }

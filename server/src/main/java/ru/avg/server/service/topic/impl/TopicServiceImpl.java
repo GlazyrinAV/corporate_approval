@@ -32,7 +32,7 @@ public class TopicServiceImpl implements TopicService {
     @Override
     public TopicDto edit(Integer topicId, TopicDto topicDto) {
         Topic topic = topicRepository.findById(topicId)
-                .orElseThrow(TopicNotFound::new);
+                .orElseThrow(() -> new TopicNotFound(topicId));
         if (!topicDto.getTitle().isBlank()) {
             topic.setTitle(topicDto.getTitle());
         }
@@ -54,6 +54,6 @@ public class TopicServiceImpl implements TopicService {
     @Override
     public TopicDto findById(Integer topicId) {
         return topicMapper.toDto(topicRepository.findById(topicId)
-                .orElseThrow(TopicNotFound::new));
+                .orElseThrow(() -> new TopicNotFound(topicId)));
     }
 }
