@@ -8,11 +8,11 @@ import java.util.List;
 
 public interface ParticipantService {
 
-    ParticipantDto save(ParticipantDto participantDto);
+    ParticipantDto save(Integer companyId, ParticipantDto participantDto);
 
-    ParticipantDto update(Integer participantId, ParticipantDto newParticipantDto);
+    ParticipantDto update(Integer companyId, Integer participantId, ParticipantDto newParticipantDto);
 
-    void delete(Integer participantId);
+    void delete(Integer companyId, Integer participantId);
 
     ParticipantDto find(String name, Integer companyId, ParticipantType type);
 
@@ -20,5 +20,5 @@ public interface ParticipantService {
 
     List<ParticipantDto> findAll(Integer companyId);
 
-    ParticipantDto findById(Integer participantId);
+    ParticipantDto findById(Integer companyId, Integer participantId);
 }

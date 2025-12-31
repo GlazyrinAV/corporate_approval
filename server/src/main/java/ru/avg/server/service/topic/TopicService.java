@@ -6,13 +6,13 @@ import java.util.List;
 
 public interface TopicService {
 
-    TopicDto save(TopicDto topicDto);
+    TopicDto save(Integer companyId, Integer meetingId, TopicDto topicDto);
 
-    TopicDto edit(Integer topicId, TopicDto topicDto);
+    TopicDto edit(Integer companyId, Integer meetingId, Integer topicId, TopicDto topicDto);
 
-    void delete(Integer topicId);
+    void delete(Integer companyId, Integer meetingId, Integer topicId);
 
-    List<TopicDto> findAllByMeeting_Id(Integer meetingId);
+    List<TopicDto> findAllByMeetingId(Integer companyId, Integer meetingId);
 
-    TopicDto findById(Integer topicId);
+    TopicDto findById(Integer companyId, Integer meetingId, Integer topicId);
 }

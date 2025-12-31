@@ -2,6 +2,8 @@ package ru.avg.server.service.participant.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.avg.server.exception.company.CompanyNotFound;
+import ru.avg.server.exception.meeting.MeetingNotFound;
 import ru.avg.server.exception.meeting.MeetingTypeNotFound;
 import ru.avg.server.exception.participant.MeetingParticipantNotFound;
 import ru.avg.server.model.dto.MeetingDto;
@@ -12,6 +14,8 @@ import ru.avg.server.model.dto.mapper.MeetingParticipantMapper;
 import ru.avg.server.model.dto.mapper.TopicMapper;
 import ru.avg.server.model.meeting.MeetingType;
 import ru.avg.server.model.participant.MeetingParticipant;
+import ru.avg.server.repository.company.CompanyRepository;
+import ru.avg.server.repository.meeting.MeetingRepository;
 import ru.avg.server.repository.participant.MeetingParticipantRepository;
 import ru.avg.server.service.meeting.MeetingService;
 import ru.avg.server.service.participant.MeetingParticipantService;
@@ -31,6 +35,10 @@ public class MeetingParticipantServiceInMemoryImpl implements MeetingParticipant
 
     private final MeetingParticipantRepository meetingParticipantRepository;
 
+    private final CompanyRepository  companyRepository;
+
+    private final MeetingRepository  meetingRepository;
+
     private final TopicService topicService;
 
     private final TopicMapper topicMapper;
@@ -42,10 +50,11 @@ public class MeetingParticipantServiceInMemoryImpl implements MeetingParticipant
     private final MeetingService meetingService;
 
     @Override
-    public List<MeetingParticipantDto> save(List<MeetingParticipantDto> participants) {
+    public List<MeetingParticipantDto> save(Integer companyId, Integer meetingId, List<MeetingParticipantDto> participants) {
+        checkCompanyIdAndMeetingId(companyId, meetingId);
         for (MeetingParticipantDto participant : participants) {
             MeetingParticipant meetingParticipant = meetingParticipantRepository.save(meetingParticipantMapper.fromDto(participant));
-            List<TopicDto> topics = topicService.findAllByMeeting_Id(meetingParticipant.getMeeting().getId());
+            List<TopicDto> topics = topicService.findAllByMeetingId(companyId, meetingParticipant.getMeeting().getId());
             if (topics != null) {
                 for (TopicDto topic : topics) {
                     votingService.create(topicMapper.fromDto(topic));
@@ -56,7 +65,8 @@ public class MeetingParticipantServiceInMemoryImpl implements MeetingParticipant
     }
 
     @Override
-    public List<MeetingParticipantDto> findAll(Integer meetingId) {
+    public List<MeetingParticipantDto> findAll(Integer companyId, Integer meetingId) {
+        checkCompanyIdAndMeetingId(companyId, meetingId);
         return meetingParticipantRepository.findAllByMeetingId(meetingId)
                 .stream()
                 .filter(x -> x.getMeeting().getId().equals(meetingId))
@@ -65,8 +75,9 @@ public class MeetingParticipantServiceInMemoryImpl implements MeetingParticipant
     }
 
     @Override
-    public List<MeetingParticipantDto> findPotential(Integer meetingId) {
-        MeetingDto meetingDto = meetingService.findById(meetingId);
+    public List<MeetingParticipantDto> findPotential(Integer companyId, Integer meetingId) {
+        checkCompanyIdAndMeetingId(companyId, meetingId);
+        MeetingDto meetingDto = meetingService.findById(companyId, meetingId);
         List<MeetingParticipantDto> currentParticipants = meetingParticipantRepository.findAllByMeetingId(meetingId).stream()
                 .map(meetingParticipantMapper::toDto)
                 .toList();
@@ -90,13 +101,25 @@ public class MeetingParticipantServiceInMemoryImpl implements MeetingParticipant
     }
 
     @Override
-    public MeetingParticipantDto findByParticipantId(Integer meetingId, Integer participantId) {
+    public MeetingParticipantDto findByParticipantId(Integer companyId, Integer meetingId, Integer participantId) {
+        checkCompanyIdAndMeetingId(companyId, meetingId);
         return meetingParticipantMapper.toDto(meetingParticipantRepository.findByMeetingIdAndParticipantId(meetingId, participantId)
                 .orElseThrow(() -> new MeetingParticipantNotFound(participantId)));
     }
 
     @Override
-    public void delete(Integer meetingParticipantId) {
+    public void delete(Integer companyId, Integer meetingId, Integer meetingParticipantId) {
+        checkCompanyIdAndMeetingId(companyId, meetingId);
         meetingParticipantRepository.deleteById(meetingParticipantId);
+    }
+
+    private void checkCompanyIdAndMeetingId(Integer companyId, Integer meetingId) {
+        if (companyRepository.findById(companyId).isEmpty()) {
+            throw new CompanyNotFound(companyId);
+        }
+
+        if (meetingRepository.findById(meetingId).isEmpty()) {
+            throw new MeetingNotFound(meetingId);
+        }
     }
 }

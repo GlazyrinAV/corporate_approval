@@ -8,15 +8,15 @@ import java.util.List;
 
 public interface MeetingService {
 
-    MeetingDto save(MeetingDto meetingDto);
+    MeetingDto save(Integer companyId, MeetingDto meetingDto);
 
-    MeetingDto update(Integer meetingId, MeetingDto  newMeetingDto);
+    MeetingDto update(Integer companyId, Integer meetingId, MeetingDto  newMeetingDto);
 
-    void delete(Integer meetingId);
+    void delete(Integer companyId, Integer meetingId);
 
     MeetingDto find(Integer companyId, MeetingType type, LocalDate date);
 
-    MeetingDto findById(Integer meetingId);
+    MeetingDto findById(Integer companyId, Integer meetingId);
 
     List<MeetingDto> findAll(Integer companyId);
 }

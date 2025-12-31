@@ -6,13 +6,13 @@ import java.util.List;
 
 public interface MeetingParticipantService {
 
-    List<MeetingParticipantDto> save(List<MeetingParticipantDto> participants);
+    List<MeetingParticipantDto> save(Integer companyId, Integer meetingId, List<MeetingParticipantDto> participants);
 
-    List<MeetingParticipantDto> findAll(Integer meetingId);
+    List<MeetingParticipantDto> findAll(Integer companyId, Integer meetingId);
 
-    List<MeetingParticipantDto> findPotential(Integer meetingId);
+    List<MeetingParticipantDto> findPotential(Integer companyId, Integer meetingId);
 
-    MeetingParticipantDto findByParticipantId(Integer meetingId, Integer participantId);
+    MeetingParticipantDto findByParticipantId(Integer companyId, Integer meetingId, Integer participantId);
 
-    void delete(Integer meetingParticipantId);
+    void delete(Integer companyId, Integer meetingId, Integer meetingParticipantId);
 }

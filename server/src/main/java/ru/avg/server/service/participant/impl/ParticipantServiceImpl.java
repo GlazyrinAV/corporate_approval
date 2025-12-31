@@ -3,6 +3,7 @@ package ru.avg.server.service.participant.impl;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.avg.server.exception.company.CompanyNotFound;
 import ru.avg.server.exception.participant.ParticipantAlreadyExist;
 import ru.avg.server.exception.participant.ParticipantNotFound;
 import ru.avg.server.model.dto.MeetingParticipantDto;
@@ -12,6 +13,7 @@ import ru.avg.server.model.dto.mapper.ParticipantMapper;
 import ru.avg.server.model.meeting.MeetingType;
 import ru.avg.server.model.participant.Participant;
 import ru.avg.server.model.participant.ParticipantType;
+import ru.avg.server.repository.company.CompanyRepository;
 import ru.avg.server.repository.participant.MeetingParticipantRepository;
 import ru.avg.server.repository.participant.ParticipantRepository;
 import ru.avg.server.service.participant.ParticipantService;
@@ -25,6 +27,8 @@ public class ParticipantServiceImpl implements ParticipantService {
 
     private final ParticipantRepository participantRepository;
 
+    private final CompanyRepository  companyRepository;
+
     private final MeetingParticipantRepository meetingParticipantRepository;
 
     private final ParticipantMapper participantMapper;
@@ -33,13 +37,15 @@ public class ParticipantServiceImpl implements ParticipantService {
 
 
     @Override
-    public ParticipantDto save(ParticipantDto participantDto) {
+    public ParticipantDto save(Integer companyId, ParticipantDto participantDto) {
+        checkCompanyId(companyId);
         return participantMapper.toDto(participantRepository.save(participantMapper.fromDto(participantDto)));
     }
 
     @Override
     @Transactional
-    public ParticipantDto update(Integer participantId, ParticipantDto newParticipantDto) {
+    public ParticipantDto update(Integer companyId, Integer participantId, ParticipantDto newParticipantDto) {
+        checkCompanyId(companyId);
         Participant participant = participantRepository.findById(participantId)
                 .orElseThrow(() -> new ParticipantNotFound(participantId));
         Participant newParticipant = participantMapper.fromDto(newParticipantDto);
@@ -72,7 +78,8 @@ public class ParticipantServiceImpl implements ParticipantService {
     }
 
     @Override
-    public void delete(Integer participantId) {
+    public void delete(Integer companyId, Integer participantId) {
+        checkCompanyId(companyId);
         List<MeetingParticipantDto> activeMeetings = meetingParticipantRepository.findByParticipantId(participantId).stream()
                 .map(meetingParticipantMapper::toDto)
                 .toList();
@@ -87,12 +94,14 @@ public class ParticipantServiceImpl implements ParticipantService {
 
     @Override
     public ParticipantDto find(String name, Integer companyId, ParticipantType type) {
+        checkCompanyId(companyId);
         return participantMapper.toDto(participantRepository.findByNameAndCompanyIdAndType(name, companyId, type)
                 .orElseThrow(() -> new ParticipantNotFound(name)));
     }
 
     @Override
     public List<ParticipantDto> findAllByMeetingType(Integer companyId, MeetingType type) {
+        checkCompanyId(companyId);
         List<Participant> participants = participantRepository.findAllByCompanyId(companyId);
         List<ParticipantDto> result = new ArrayList<>();
         if (participants != null) {
@@ -110,6 +119,7 @@ public class ParticipantServiceImpl implements ParticipantService {
 
     @Override
     public List<ParticipantDto> findAll(Integer companyId) {
+        checkCompanyId(companyId);
         List<Participant> participants = participantRepository.findAllByCompanyId(companyId);
         return participants.stream()
                 .map(participantMapper::toDto)
@@ -117,8 +127,15 @@ public class ParticipantServiceImpl implements ParticipantService {
     }
 
     @Override
-    public ParticipantDto findById(Integer participantId) {
+    public ParticipantDto findById(Integer companyId, Integer participantId) {
+        checkCompanyId(companyId);
         return participantMapper.toDto(participantRepository.findById(participantId)
                 .orElseThrow(() -> new ParticipantNotFound(participantId)));
+    }
+
+    private void checkCompanyId(Integer companyId) {
+        if (companyRepository.findById(companyId).isEmpty()) {
+            throw new CompanyNotFound(companyId);
+        }
     }
 }

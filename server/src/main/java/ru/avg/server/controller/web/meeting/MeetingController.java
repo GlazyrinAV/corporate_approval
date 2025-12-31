@@ -1,7 +1,10 @@
 package ru.avg.server.controller.web.meeting;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +21,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/approval/{companyId}/meeting")
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Slf4j
 public class MeetingController {
 
@@ -31,6 +34,10 @@ public class MeetingController {
      * @param companyId the ID of the company for which to retrieve all meetings
      * @return ResponseEntity containing a list of MeetingDto objects with HTTP status 200 OK
      */
+    @Operation(summary = "Get all meetings", description = "Retrieves all meetings associated with a specific company")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved list of meetings")
+    })
     @GetMapping
     public ResponseEntity<List<MeetingDto>> findAll(@PathVariable Integer companyId) {
         log.debug("Fetching all meetings for companyId: {}", companyId);
@@ -46,12 +53,17 @@ public class MeetingController {
      * @param meetingId the ID of the meeting to retrieve
      * @return ResponseEntity containing the requested MeetingDto with HTTP status 200 OK
      */
+    @Operation(summary = "Get meeting by ID", description = "Retrieves a specific meeting by its unique identifier within the context of a company")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved the meeting"),
+        @ApiResponse(responseCode = "404", description = "Meeting not found")
+    })
     @GetMapping("/{meetingId}")
     public ResponseEntity<MeetingDto> findById(
             @PathVariable Integer companyId,
             @PathVariable Integer meetingId) {
         log.debug("Fetching meeting with meetingId: {} for companyId: {}", meetingId, companyId);
-        MeetingDto meeting = meetingService.findById(meetingId);
+        MeetingDto meeting = meetingService.findById(companyId, meetingId);
         return ResponseEntity.ok(meeting);
     }
 
@@ -64,12 +76,17 @@ public class MeetingController {
      * @param meetingDto the MeetingDto containing the data for the new meeting
      * @return ResponseEntity containing the created MeetingDto with assigned ID and HTTP status 201 Created
      */
+    @Operation(summary = "Create new meeting", description = "Creates a new meeting for a specific company")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Meeting created successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     @PostMapping
     public ResponseEntity<MeetingDto> save(
             @PathVariable Integer companyId,
             @Valid @RequestBody MeetingDto meetingDto) {
         log.info("Creating new meeting for companyId: {}: {}", companyId, meetingDto);
-        MeetingDto savedMeeting = meetingService.save(meetingDto);
+        MeetingDto savedMeeting = meetingService.save(companyId, meetingDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedMeeting);
     }
 
@@ -83,13 +100,19 @@ public class MeetingController {
      * @param newMeetingDto the MeetingDto containing the fields to update
      * @return ResponseEntity containing the updated MeetingDto with HTTP status 200 OK
      */
+    @Operation(summary = "Update meeting", description = "Partially updates an existing meeting identified by its ID within the context of a company")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Meeting updated successfully"),
+        @ApiResponse(responseCode = "404", description = "Meeting not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     @PatchMapping("/{meetingId}")
     public ResponseEntity<MeetingDto> update(
             @PathVariable Integer companyId,
             @PathVariable Integer meetingId,
             @Valid @RequestBody MeetingDto newMeetingDto) {
         log.info("Updating meeting with meetingId: {} for companyId: {}: {}", meetingId, companyId, newMeetingDto);
-        MeetingDto updatedMeeting = meetingService.update(meetingId, newMeetingDto);
+        MeetingDto updatedMeeting = meetingService.update(companyId, meetingId, newMeetingDto);
         return ResponseEntity.ok(updatedMeeting);
     }
 
@@ -101,12 +124,17 @@ public class MeetingController {
      * @param meetingId the ID of the meeting to delete
      * @return ResponseEntity with no content and HTTP status 204 No Content
      */
+    @Operation(summary = "Delete meeting", description = "Deletes a meeting identified by its ID within the context of a company")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Meeting deleted successfully"),
+        @ApiResponse(responseCode = "404", description = "Meeting not found")
+    })
     @DeleteMapping("/{meetingId}")
     public ResponseEntity<Void> remove(
             @PathVariable Integer companyId,
             @PathVariable Integer meetingId) {
         log.info("Deleting meeting with meetingId: {} for companyId: {}", meetingId, companyId);
-        meetingService.delete(meetingId);
+        meetingService.delete(companyId, meetingId);
         return ResponseEntity.noContent().build();
     }
 }

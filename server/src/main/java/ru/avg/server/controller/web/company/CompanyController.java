@@ -1,7 +1,10 @@
 package ru.avg.server.controller.web.company;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +21,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/approval/company")
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Slf4j
 public class CompanyController {
 
@@ -32,6 +35,11 @@ public class CompanyController {
      * @param companyDto the CompanyDto containing the data for the new company
      * @return ResponseEntity containing the saved CompanyDto with HTTP status 201 Created
      */
+    @Operation(summary = "Create new company", description = "Creates a new company based on the provided CompanyDto")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Company created successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     @PostMapping
     public ResponseEntity<CompanyDto> save(@RequestBody @Valid CompanyDto companyDto) {
         log.debug("Saving new Company: {}", companyDto);
@@ -45,6 +53,11 @@ public class CompanyController {
      * @param companyId the ID of the company to retrieve
      * @return ResponseEntity containing the CompanyDto with HTTP status 200 OK
      */
+    @Operation(summary = "Get company by ID", description = "Retrieves a company by its unique identifier")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved the company"),
+        @ApiResponse(responseCode = "404", description = "Company not found")
+    })
     @GetMapping("/{companyId}")
     public ResponseEntity<CompanyDto> findById(@PathVariable Integer companyId) {
         log.debug("Finding company by companyId: {}", companyId);
@@ -57,6 +70,10 @@ public class CompanyController {
      *
      * @return ResponseEntity containing a list of CompanyDto objects with HTTP status 200 OK
      */
+    @Operation(summary = "Get all companies", description = "Retrieves a list of all existing companies")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved list of companies")
+    })
     @GetMapping
     public ResponseEntity<List<CompanyDto>> findAll() {
         log.debug("Finding all companies");
@@ -73,6 +90,12 @@ public class CompanyController {
      * @param company   the CompanyDto containing the fields to update
      * @return ResponseEntity containing the updated CompanyDto with HTTP status 200 OK
      */
+    @Operation(summary = "Update company", description = "Partially updates an existing company using the provided fields in CompanyDto")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Company updated successfully"),
+        @ApiResponse(responseCode = "404", description = "Company not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     @PatchMapping("/{companyId}")
     public ResponseEntity<CompanyDto> update(
             @PathVariable Integer companyId,
@@ -89,6 +112,11 @@ public class CompanyController {
      * @param companyId the ID of the company to delete
      * @return ResponseEntity with no content and HTTP status 204 No Content
      */
+    @Operation(summary = "Delete company", description = "Deletes a company identified by its ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Company deleted successfully"),
+        @ApiResponse(responseCode = "404", description = "Company not found")
+    })
     @DeleteMapping("/{companyId}")
     public ResponseEntity<Void> delete(@PathVariable Integer companyId) {
         log.debug("Deleting company by companyId: {}", companyId);

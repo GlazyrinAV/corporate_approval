@@ -2,6 +2,7 @@ package ru.avg.server.service.voting.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.avg.server.exception.company.CompanyNotFound;
 import ru.avg.server.exception.voting.VotingNotFound;
 import ru.avg.server.model.dto.VoterDto;
 import ru.avg.server.model.dto.VotingDto;
@@ -10,6 +11,8 @@ import ru.avg.server.model.meeting.MeetingType;
 import ru.avg.server.model.topic.Topic;
 import ru.avg.server.model.voting.VoteType;
 import ru.avg.server.model.voting.Voting;
+import ru.avg.server.repository.company.CompanyRepository;
+import ru.avg.server.repository.meeting.MeetingRepository;
 import ru.avg.server.repository.voting.VotingRepository;
 import ru.avg.server.service.voting.VoterService;
 import ru.avg.server.service.voting.VotingService;
@@ -21,6 +24,10 @@ import java.util.List;
 public class VotingServiceImpl implements VotingService {
 
     private final VotingRepository votingRepository;
+
+    private final CompanyRepository companyRepository;
+
+    private final MeetingRepository meetingRepository;
 
     private final VotingMapper votingMapper;
 
@@ -51,7 +58,8 @@ public class VotingServiceImpl implements VotingService {
     }
 
     @Override
-    public VotingDto makeVote(Integer topicId, List<VoterDto> voters) {
+    public VotingDto makeVote(Integer companyId, Integer meetingId, Integer topicId, List<VoterDto> voters) {
+        checkCompanyIdAndMeetingId(companyId, meetingId);
         for (VoterDto voter : voters) {
             if (voterService.find(voter.getTopicId()) != null) {
                 voterService.makeVote(voter);
@@ -60,6 +68,15 @@ public class VotingServiceImpl implements VotingService {
         checkVoting(topicId, voters);
         return votingMapper.toDto(votingRepository.findByTopicId(topicId)
                 .orElseThrow(() -> new VotingNotFound(topicId)));
+    }
+
+    private void checkCompanyIdAndMeetingId(Integer companyId, Integer meetingId) {
+        if (companyRepository.findById(companyId).isEmpty()) {
+            throw new CompanyNotFound(companyId);
+        }
+        if (meetingRepository.findById(meetingId).isEmpty()) {
+            throw new VotingNotFound(meetingId);
+        }
     }
 
     private void checkVoting(Integer topicId, List<VoterDto> voters) {

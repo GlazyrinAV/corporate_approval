@@ -14,5 +14,5 @@ public interface VotingService {
 
     VotingDto findByTopicId(Integer topicId);
 
-    VotingDto makeVote(Integer topicId, List<VoterDto> voters);
+    VotingDto makeVote(Integer companyId, Integer meetingId, Integer topicId, List<VoterDto> voters);
 }

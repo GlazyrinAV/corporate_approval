@@ -1,7 +1,10 @@
 package ru.avg.server.controller.web.voting;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +20,7 @@ import ru.avg.server.service.voting.VotingService;
  */
 @RestController
 @RequestMapping("/approval/{companyId}/{meetingId}/{topicId}/voting")
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Slf4j
 public class VotingController {
 
@@ -34,6 +37,11 @@ public class VotingController {
      * @param voters    the DTO containing the list of participants and their votes
      * @return ResponseEntity with the created VotingDto and HTTP status 201 Created
      */
+    @Operation(summary = "Submit votes", description = "Submits votes for a specific topic identified by topicId")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Votes submitted successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     @PostMapping("/make_vote")
     public ResponseEntity<VotingDto> saveVote(
             @PathVariable Integer companyId,
@@ -41,7 +49,7 @@ public class VotingController {
             @PathVariable Integer topicId,
             @Valid @RequestBody VotingCreationDto voters) {
         log.debug("Submitting votes for topicId: {} in meeting: {} of company: {}", topicId, meetingId, companyId);
-        VotingDto votingDto = votingService.makeVote(topicId, voters.getVoters());
+        VotingDto votingDto = votingService.makeVote(companyId, meetingId, topicId, voters.getVoters());
         return ResponseEntity.status(HttpStatus.CREATED).body(votingDto);
     }
 }
