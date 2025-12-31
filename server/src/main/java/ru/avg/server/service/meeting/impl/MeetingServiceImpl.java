@@ -61,7 +61,8 @@ public class MeetingServiceImpl implements MeetingService {
 
     @Override
     public MeetingDto find(Integer companyId, MeetingType type, LocalDate date) {
-        return meetingMapper.toDto(meetingRepository.findByCompanyIdAndTypeAndDate(companyId, type, date));
+        return meetingMapper.toDto(meetingRepository.findByCompanyIdAndTypeAndDate(companyId, type, date)
+                .orElseThrow(() -> new MeetingNotFound(companyId, date)));
     }
 
     @Override

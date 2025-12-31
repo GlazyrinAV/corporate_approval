@@ -3,6 +3,7 @@ package ru.avg.server.service.participant.impl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.avg.server.exception.meeting.MeetingTypeNotFound;
+import ru.avg.server.exception.participant.MeetingParticipantNotFound;
 import ru.avg.server.model.dto.MeetingDto;
 import ru.avg.server.model.dto.MeetingParticipantDto;
 import ru.avg.server.model.dto.ParticipantDto;
@@ -90,7 +91,8 @@ public class MeetingParticipantServiceInMemoryImpl implements MeetingParticipant
 
     @Override
     public MeetingParticipantDto findByParticipantId(Integer meetingId, Integer participantId) {
-        return meetingParticipantMapper.toDto(meetingParticipantRepository.findByMeetingIdAndParticipantId(meetingId, participantId));
+        return meetingParticipantMapper.toDto(meetingParticipantRepository.findByMeetingIdAndParticipantId(meetingId, participantId)
+                .orElseThrow(() -> new MeetingParticipantNotFound(participantId)));
     }
 
     @Override

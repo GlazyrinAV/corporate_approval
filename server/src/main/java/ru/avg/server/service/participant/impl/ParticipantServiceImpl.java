@@ -87,7 +87,8 @@ public class ParticipantServiceImpl implements ParticipantService {
 
     @Override
     public ParticipantDto find(String name, Integer companyId, ParticipantType type) {
-        return participantMapper.toDto(participantRepository.findByNameAndCompanyIdAndType(name, companyId, type));
+        return participantMapper.toDto(participantRepository.findByNameAndCompanyIdAndType(name, companyId, type)
+                .orElseThrow(() -> new ParticipantNotFound(name)));
     }
 
     @Override

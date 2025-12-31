@@ -2,6 +2,7 @@ package ru.avg.server.service.voting.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.avg.server.exception.voting.VotingNotFound;
 import ru.avg.server.model.dto.VoterDto;
 import ru.avg.server.model.dto.VotingDto;
 import ru.avg.server.model.dto.mapper.VotingMapper;
@@ -27,7 +28,8 @@ public class VotingServiceImpl implements VotingService {
 
     @Override
     public VotingDto create(Topic topic) {
-        Voting voting = votingRepository.findByTopicId(topic.getId());
+        Voting voting = votingRepository.findByTopicId(topic.getId())
+                .orElseThrow(() -> new VotingNotFound(topic.getId()));
         if (voting == null) {
             voting = votingRepository.save(Voting.builder()
                     .topic(topic)
@@ -44,7 +46,8 @@ public class VotingServiceImpl implements VotingService {
 
     @Override
     public VotingDto findByTopicId(Integer topicId) {
-        return votingMapper.toDto(votingRepository.findByTopicId(topicId));
+        return votingMapper.toDto(votingRepository.findByTopicId(topicId)
+                .orElseThrow(() -> new VotingNotFound(topicId)));
     }
 
     @Override
@@ -55,11 +58,13 @@ public class VotingServiceImpl implements VotingService {
             }
         }
         checkVoting(topicId, voters);
-        return votingMapper.toDto(votingRepository.findByTopicId(topicId));
+        return votingMapper.toDto(votingRepository.findByTopicId(topicId)
+                .orElseThrow(() -> new VotingNotFound(topicId)));
     }
 
     private void checkVoting(Integer topicId, List<VoterDto> voters) {
-        Voting voting = votingRepository.findByTopicId(topicId);
+        Voting voting = votingRepository.findByTopicId(topicId)
+                .orElseThrow(() -> new VotingNotFound(topicId));
         Double count = 0.0;
 
         for (VoterDto voter : voters) {
