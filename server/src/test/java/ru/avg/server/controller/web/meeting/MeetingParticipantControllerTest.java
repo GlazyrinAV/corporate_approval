@@ -9,9 +9,9 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import ru.avg.server.model.dto.MeetingParticipantCreationDto;
-import ru.avg.server.model.dto.MeetingParticipantDto;
-import ru.avg.server.model.dto.ParticipantDto;
+import ru.avg.server.model.dto.participant.MeetingParticipantCreationDto;
+import ru.avg.server.model.dto.participant.MeetingParticipantDto;
+import ru.avg.server.model.dto.participant.ParticipantDto;
 import ru.avg.server.service.participant.MeetingParticipantService;
 
 import java.util.Arrays;

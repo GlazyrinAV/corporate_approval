@@ -1,4 +1,4 @@
-package ru.avg.server.model.dto.mapper;
+package ru.avg.server.model.dto.voting.mapper;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -6,7 +6,8 @@ import ru.avg.server.exception.participant.MeetingParticipantNotFound;
 import ru.avg.server.exception.topic.TopicNotFound;
 import ru.avg.server.exception.voting.VoteTypeNotFound;
 import ru.avg.server.exception.voting.VotingNotFound;
-import ru.avg.server.model.dto.VoterDto;
+import ru.avg.server.model.dto.participant.mapper.MeetingParticipantMapper;
+import ru.avg.server.model.dto.voting.VoterDto;
 import ru.avg.server.model.voting.VoteType;
 import ru.avg.server.model.voting.Voter;
 import ru.avg.server.repository.participant.MeetingParticipantRepository;
@@ -25,14 +26,53 @@ import java.util.stream.Collectors;
  *
  * <p>The mapper uses a pre-built map for O(1) lookup of {@link VoteType} by its title, improving performance over linear search.
  * It validates the existence of all required associations (participant, topic, voting) during the mapping process.</p>
+ *
+ * @author AVG
+ * @since 1.0
  */
 @Component
 @RequiredArgsConstructor
 public class VoterMapper {
 
+    /**
+     * Repository used to access and retrieve meeting participant entities from the persistence layer.
+     * This dependency is injected by Spring and is used to validate the existence of a meeting participant
+     * when converting a {@link VoterDto} to a {@link Voter} entity by looking up the participant by ID.
+     *
+     * @see MeetingParticipantRepository#findById(Object)
+     * @see #fromDto(VoterDto)
+     */
     private final MeetingParticipantRepository meetingParticipantRepository;
+
+    /**
+     * Mapper responsible for converting between {@link ru.avg.server.model.participant.MeetingParticipant} entities
+     * and {@link ru.avg.server.model.dto.participant.MeetingParticipantDto} objects.
+     * This dependency is injected by Spring and is used to transform the participant portion
+     * of a {@link Voter} entity to its DTO representation during the {@link #toDto(Voter)} operation.
+     *
+     * @see MeetingParticipantMapper#toDto(ru.avg.server.model.participant.MeetingParticipant)
+     * @see #toDto(Voter)
+     */
     private final MeetingParticipantMapper meetingParticipantMapper;
+
+    /**
+     * Repository used to access and retrieve topic entities from the persistence layer.
+     * This dependency is injected by Spring and is used to validate the existence of a topic
+     * when converting a {@link VoterDto} to a {@link Voter} entity by looking up the topic by ID.
+     *
+     * @see TopicRepository#findById(Object)
+     * @see #fromDto(VoterDto)
+     */
     private final TopicRepository topicRepository;
+
+    /**
+     * Repository used to access and retrieve voting session entities from the persistence layer.
+     * This dependency is injected by Spring and is used to validate the existence of a voting session
+     * when converting a {@link VoterDto} to a {@link Voter} entity by looking up the voting session by ID.
+     *
+     * @see VotingRepository#findById(Object)
+     * @see #fromDto(VoterDto)
+     */
     private final VotingRepository votingRepository;
 
     /**
@@ -40,6 +80,9 @@ public class VoterMapper {
      * This map is initialized at class loading time from all values of the {@link VoteType} enum,
      * using the title (as returned by {@link VoteType#getTitle()}) as the key.
      * It eliminates the need for stream-based filtering during DTO-to-entity conversion, significantly improving performance.
+     *
+     * @see #fromDto(VoterDto)
+     * @see VoteType#getTitle()
      */
     private static final Map<String, VoteType> VOTE_TYPE_MAP = Arrays.stream(VoteType.values())
             .collect(Collectors.toMap(VoteType::getTitle, Function.identity()));
@@ -57,6 +100,10 @@ public class VoterMapper {
      * @throws TopicNotFound              if no topic exists with the ID specified in the DTO
      * @throws VotingNotFound             if no voting session exists with the ID specified in the DTO
      * @throws VoteTypeNotFound           if the vote type string in the DTO does not match any known {@link VoteType} title
+     * @see VotingRepository#findById(Object)
+     * @see TopicRepository#findById(Object)
+     * @see MeetingParticipantRepository#findById(Object)
+     * @see Voter#builder()
      */
     public Voter fromDto(VoterDto voterDto) {
         if (voterDto == null) {
@@ -91,6 +138,8 @@ public class VoterMapper {
      * @param voter the entity to convert; must not be null and must have valid associations to participant, topic, and voting
      * @return a fully populated {@link VoterDto} with all relevant fields, including IDs of associated entities and vote type title
      * @throws IllegalArgumentException if the provided {@code voter} is null or any of its required associations (participant, topic, voting) are missing
+     * @see MeetingParticipantMapper#toDto(ru.avg.server.model.participant.MeetingParticipant)
+     * @see VoterDto#builder()
      */
     public VoterDto toDto(Voter voter) {
         if (voter == null) {

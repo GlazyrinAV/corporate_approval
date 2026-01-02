@@ -7,7 +7,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import ru.avg.server.model.dto.MeetingDto;
+import ru.avg.server.model.dto.meeting.MeetingDto;
+import ru.avg.server.model.dto.meeting.NewMeetingDto;
 import ru.avg.server.service.meeting.MeetingService;
 
 import java.time.LocalDate;
@@ -42,6 +43,8 @@ class MeetingControllerTest {
                 .secretaryId(202)
                 .build();
     }
+
+    // === GET /approval/{companyId}/meeting ===
 
     @Test
     void findAll_ShouldReturnOkStatusAndListOfMeetings() {
@@ -78,6 +81,8 @@ class MeetingControllerTest {
         verify(meetingService, times(1)).findAll(companyId);
     }
 
+    // === GET /approval/{companyId}/meeting/{meetingId} ===
+
     @Test
     void findById_ShouldReturnOkStatusAndMeeting() {
         // Given
@@ -99,6 +104,11 @@ class MeetingControllerTest {
     void findById_ShouldReturnMeetingWithNullChairmanAndSecretary() {
         // Given
         MeetingDto meetingWithoutRoles = MeetingDto.builder()
+                .id(meetingId)
+                .companyId(companyId)
+                .type("Общее собрание акционеров")
+                .date(LocalDate.now())
+                .address("123 Main St")
                 .chairmanId(null)
                 .secretaryId(null)
                 .build();
@@ -120,7 +130,13 @@ class MeetingControllerTest {
     void findById_ShouldReturnMeetingWithNullOptionalFields() {
         // Given
         MeetingDto meetingWithNulls = MeetingDto.builder()
+                .id(meetingId)
+                .companyId(companyId)
+                .type("Общее собрание акционеров")
+                .date(LocalDate.now())
                 .address(null)
+                .chairmanId(201)
+                .secretaryId(202)
                 .build();
         when(meetingService.findById(companyId, meetingId)).thenReturn(meetingWithNulls);
 
@@ -135,13 +151,17 @@ class MeetingControllerTest {
         verify(meetingService, times(1)).findById(companyId, meetingId);
     }
 
+    // === POST /approval/{companyId}/meeting ===
+
     @Test
     void save_ShouldReturnCreatedStatusAndSavedMeeting() {
         // Given
-        MeetingDto newMeetingDto = MeetingDto.builder()
-                .id(null)
+        NewMeetingDto newMeetingDto = NewMeetingDto.builder()
+                .companyId(companyId)
+                .type("New Meeting")
+                .date(LocalDate.now())
                 .build();
-        when(meetingService.save(eq(companyId), any(MeetingDto.class))).thenReturn(meetingDto);
+        when(meetingService.save(eq(companyId), any(NewMeetingDto.class))).thenReturn(meetingDto);
 
         // When
         ResponseEntity<MeetingDto> response = meetingController.save(companyId, newMeetingDto);
@@ -152,16 +172,21 @@ class MeetingControllerTest {
         assertNotNull(response.getBody());
         assertEquals(meetingId, response.getBody().getId());
         assertEquals("Общее собрание акционеров", response.getBody().getType());
-        verify(meetingService, times(1)).save(eq(companyId), argThat(dto -> dto.getId() == null));
+        verify(meetingService, times(1)).save(eq(companyId), any(NewMeetingDto.class));
     }
 
     @Test
     void save_ShouldPreserveAllFieldsInSavedMeeting() {
         // Given
-        when(meetingService.save(eq(companyId), any(MeetingDto.class))).thenReturn(meetingDto);
+        NewMeetingDto newMeetingDto = NewMeetingDto.builder()
+                .companyId(companyId)
+                .type("New Meeting")
+                .date(LocalDate.now())
+                .build();
+        when(meetingService.save(eq(companyId), any(NewMeetingDto.class))).thenReturn(meetingDto);
 
         // When
-        ResponseEntity<MeetingDto> response = meetingController.save(companyId, meetingDto);
+        ResponseEntity<MeetingDto> response = meetingController.save(companyId, newMeetingDto);
 
         // Then
         assertNotNull(response);
@@ -171,21 +196,64 @@ class MeetingControllerTest {
         assertEquals(meetingDto.getCompanyId(), response.getBody().getCompanyId());
         assertEquals(meetingDto.getAddress(), response.getBody().getAddress());
         assertEquals(meetingDto.getChairmanId(), response.getBody().getChairmanId());
-        verify(meetingService, times(1)).save(eq(companyId), any(MeetingDto.class));
+        verify(meetingService, times(1)).save(eq(companyId), any(NewMeetingDto.class));
     }
+
+    @Test
+    void save_ShouldHandleMeetingDtoWithNullOptionalFields() {
+        // Given
+        NewMeetingDto incompleteDto = NewMeetingDto.builder()
+                .companyId(companyId)
+                .type("Annual Meeting")
+                .date(LocalDate.now())
+                .address(null)
+                .chairmanId(null)
+                .secretaryId(null)
+                .build();
+        MeetingDto savedDto = MeetingDto.builder()
+                .id(meetingId)
+                .companyId(companyId)
+                .type("Annual Meeting")
+                .date(LocalDate.now())
+                .address(null)
+                .chairmanId(null)
+                .secretaryId(null)
+                .build();
+        when(meetingService.save(eq(companyId), any(NewMeetingDto.class))).thenReturn(savedDto);
+
+        // When
+        ResponseEntity<MeetingDto> response = meetingController.save(companyId, incompleteDto);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(companyId, response.getBody().getCompanyId());
+        assertNull(response.getBody().getAddress());
+        assertNull(response.getBody().getChairmanId());
+        assertNull(response.getBody().getSecretaryId());
+        verify(meetingService, times(1)).save(eq(companyId), any(NewMeetingDto.class));
+    }
+
+    // === PATCH /approval/{companyId}/meeting/{meetingId} ===
 
     @Test
     void update_ShouldReturnOkStatusAndUpdatedMeeting() {
         // Given
-        MeetingDto updateDto = MeetingDto.builder()
+        NewMeetingDto updateDto = NewMeetingDto.builder()
                 .type("Extraordinary Meeting")
                 .address("456 Oak Ave")
                 .build();
         MeetingDto updatedMeeting = MeetingDto.builder()
+                .id(meetingId)
+                .companyId(companyId)
                 .type("Extraordinary Meeting")
+                .date(LocalDate.now())
                 .address("456 Oak Ave")
+                .chairmanId(201)
+                .secretaryId(202)
                 .build();
-        when(meetingService.update(eq(companyId), eq(meetingId), any(MeetingDto.class))).thenReturn(updatedMeeting);
+        when(meetingService.update(eq(companyId), eq(meetingId), any(NewMeetingDto.class))).thenReturn(updatedMeeting);
 
         // When
         ResponseEntity<MeetingDto> response = meetingController.update(companyId, meetingId, updateDto);
@@ -196,13 +264,13 @@ class MeetingControllerTest {
         assertNotNull(response.getBody());
         assertEquals("Extraordinary Meeting", response.getBody().getType());
         assertEquals("456 Oak Ave", response.getBody().getAddress());
-        verify(meetingService, times(1)).update(eq(companyId), eq(meetingId), any(MeetingDto.class));
+        verify(meetingService, times(1)).update(eq(companyId), eq(meetingId), any(NewMeetingDto.class));
     }
 
     @Test
     void update_ShouldAllowPartialUpdateWithOnlySomeFields() {
         // Given
-        MeetingDto updateDto = MeetingDto.builder()
+        NewMeetingDto updateDto = NewMeetingDto.builder()
                 .address("Updated Address")
                 .build();
         MeetingDto updatedMeeting = MeetingDto.builder()
@@ -214,7 +282,7 @@ class MeetingControllerTest {
                 .chairmanId(201)
                 .secretaryId(202)
                 .build();
-        when(meetingService.update(eq(companyId), eq(meetingId), any(MeetingDto.class))).thenReturn(updatedMeeting);
+        when(meetingService.update(eq(companyId), eq(meetingId), any(NewMeetingDto.class))).thenReturn(updatedMeeting);
 
         // When
         ResponseEntity<MeetingDto> response = meetingController.update(companyId, meetingId, updateDto);
@@ -225,21 +293,26 @@ class MeetingControllerTest {
         assertNotNull(response.getBody());
         assertEquals("Updated Address", response.getBody().getAddress());
         assertEquals("Общее собрание акционеров", response.getBody().getType()); // Unchanged
-        verify(meetingService, times(1)).update(eq(companyId), eq(meetingId), any(MeetingDto.class));
+        verify(meetingService, times(1)).update(eq(companyId), eq(meetingId), any(NewMeetingDto.class));
     }
 
     @Test
     void update_ShouldReturnMeetingWithNullValues() {
         // Given
-        MeetingDto updateDto = MeetingDto.builder()
+        NewMeetingDto updateDto = NewMeetingDto.builder()
                 .chairmanId(null)
                 .secretaryId(null)
                 .build();
         MeetingDto updatedMeeting = MeetingDto.builder()
+                .id(meetingId)
+                .companyId(companyId)
+                .type("Общее собрание акционеров")
+                .date(LocalDate.now())
+                .address("123 Main St")
                 .chairmanId(null)
                 .secretaryId(null)
                 .build();
-        when(meetingService.update(eq(companyId), eq(meetingId), any(MeetingDto.class))).thenReturn(updatedMeeting);
+        when(meetingService.update(eq(companyId), eq(meetingId), any(NewMeetingDto.class))).thenReturn(updatedMeeting);
 
         // When
         ResponseEntity<MeetingDto> response = meetingController.update(companyId, meetingId, updateDto);
@@ -250,8 +323,40 @@ class MeetingControllerTest {
         assertNotNull(response.getBody());
         assertNull(response.getBody().getChairmanId());
         assertNull(response.getBody().getSecretaryId());
-        verify(meetingService, times(1)).update(eq(companyId), eq(meetingId), any(MeetingDto.class));
+        verify(meetingService, times(1)).update(eq(companyId), eq(meetingId), any(NewMeetingDto.class));
     }
+
+    @Test
+    void update_ShouldHandleMeetingDtoWithNullOptionalFields() {
+        // Given
+        NewMeetingDto updateDto = NewMeetingDto.builder()
+                .address(null)
+                .chairmanId(null)
+                .build();
+        MeetingDto updatedMeeting = MeetingDto.builder()
+                .id(meetingId)
+                .companyId(companyId)
+                .type("Общее собрание акционеров")
+                .date(LocalDate.now())
+                .address(null)
+                .chairmanId(null)
+                .secretaryId(202)
+                .build();
+        when(meetingService.update(eq(companyId), eq(meetingId), any(NewMeetingDto.class))).thenReturn(updatedMeeting);
+
+        // When
+        ResponseEntity<MeetingDto> response = meetingController.update(companyId, meetingId, updateDto);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertNull(response.getBody().getAddress());
+        assertNull(response.getBody().getChairmanId());
+        verify(meetingService, times(1)).update(eq(companyId), eq(meetingId), any(NewMeetingDto.class));
+    }
+
+    // === DELETE /approval/{companyId}/meeting/{meetingId} ===
 
     @Test
     void remove_ShouldReturnNoContentStatus() {
@@ -271,41 +376,42 @@ class MeetingControllerTest {
     @Test
     void remove_ShouldHandleNonExistentMeetingIdGracefully() {
         // Given
-        doNothing().when(meetingService).delete(companyId, 999);
+        doThrow(new RuntimeException("Meeting not found")).when(meetingService).delete(companyId, 999);
 
-        // When
-        ResponseEntity<Void> response = meetingController.remove(companyId, 999);
-
-        // Then
-        assertNotNull(response);
-        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        // When/Then
+        assertThrows(RuntimeException.class, () -> meetingController.remove(companyId, 999));
         verify(meetingService, times(1)).delete(companyId, 999);
     }
+
+    // === Logging & Service Interaction Tests ===
 
     @Test
     void controllerShouldLogSaveOperation() {
         // Given
-        MeetingDto newMeetingDto = MeetingDto.builder().id(null).build();
-        when(meetingService.save(eq(companyId), any(MeetingDto.class))).thenReturn(meetingDto);
+        NewMeetingDto newMeetingDto = NewMeetingDto.builder()
+                .companyId(companyId)
+                .type("Log Test")
+                .build();
+        when(meetingService.save(eq(companyId), any(NewMeetingDto.class))).thenReturn(meetingDto);
 
         // When
         meetingController.save(companyId, newMeetingDto);
 
         // Then
-        verify(meetingService, times(1)).save(eq(companyId), any(MeetingDto.class));
+        verify(meetingService, times(1)).save(eq(companyId), any(NewMeetingDto.class));
     }
 
     @Test
     void controllerShouldLogUpdateOperation() {
         // Given
-        MeetingDto updateDto = MeetingDto.builder().type("Updated").build();
-        when(meetingService.update(eq(companyId), eq(meetingId), any(MeetingDto.class))).thenReturn(meetingDto);
+        NewMeetingDto updateDto = NewMeetingDto.builder().type("Updated").build();
+        when(meetingService.update(eq(companyId), eq(meetingId), any(NewMeetingDto.class))).thenReturn(meetingDto);
 
         // When
         meetingController.update(companyId, meetingId, updateDto);
 
         // Then
-        verify(meetingService, times(1)).update(eq(companyId), eq(meetingId), any(MeetingDto.class));
+        verify(meetingService, times(1)).update(eq(companyId), eq(meetingId), any(NewMeetingDto.class));
     }
 
     @Test
@@ -319,6 +425,8 @@ class MeetingControllerTest {
         // Then
         verify(meetingService, times(1)).delete(companyId, meetingId);
     }
+
+    // === Parameter Passing Verification ===
 
     @Test
     void findAll_ShouldCallServiceWithCompanyId() {
@@ -347,14 +455,14 @@ class MeetingControllerTest {
     @Test
     void update_ShouldPassAllParametersToService() {
         // Given
-        MeetingDto updateDto = MeetingDto.builder().type("Updated").build();
-        when(meetingService.update(eq(companyId), eq(meetingId), any(MeetingDto.class))).thenReturn(meetingDto);
+        NewMeetingDto updateDto = NewMeetingDto.builder().type("Updated").build();
+        when(meetingService.update(eq(companyId), eq(meetingId), any(NewMeetingDto.class))).thenReturn(meetingDto);
 
         // When
         meetingController.update(companyId, meetingId, updateDto);
 
         // Then
-        verify(meetingService, times(1)).update(eq(companyId), eq(meetingId), any(MeetingDto.class));
+        verify(meetingService, times(1)).update(eq(companyId), eq(meetingId), any(NewMeetingDto.class));
     }
 
     @Test
@@ -367,59 +475,5 @@ class MeetingControllerTest {
 
         // Then
         verify(meetingService, times(1)).delete(companyId, meetingId);
-    }
-
-    @Test
-    void save_ShouldHandleMeetingDtoWithNullOptionalFields() {
-        // Given
-        MeetingDto incompleteDto = MeetingDto.builder()
-                .companyId(companyId)
-                .type("Annual Meeting")
-                .date(LocalDate.now())
-                .address(null)
-                .chairmanId(null)
-                .secretaryId(null)
-                .build();
-        MeetingDto savedDto = MeetingDto.builder()
-                .id(meetingId)
-                .build();
-        when(meetingService.save(eq(companyId), any(MeetingDto.class))).thenReturn(savedDto);
-
-        // When
-        ResponseEntity<MeetingDto> response = meetingController.save(companyId, incompleteDto);
-
-        // Then
-        assertNotNull(response);
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertNull(response.getBody().getAddress());
-        assertNull(response.getBody().getChairmanId());
-        assertNull(response.getBody().getSecretaryId());
-        verify(meetingService, times(1)).save(eq(companyId), any(MeetingDto.class));
-    }
-
-    @Test
-    void update_ShouldHandleMeetingDtoWithNullOptionalFields() {
-        // Given
-        MeetingDto updateDto = MeetingDto.builder()
-                .address(null)
-                .chairmanId(null)
-                .build();
-        MeetingDto updatedMeeting = MeetingDto.builder()
-                .address(null)
-                .chairmanId(null)
-                .build();
-        when(meetingService.update(eq(companyId), eq(meetingId), any(MeetingDto.class))).thenReturn(updatedMeeting);
-
-        // When
-        ResponseEntity<MeetingDto> response = meetingController.update(companyId, meetingId, updateDto);
-
-        // Then
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertNull(response.getBody().getAddress());
-        assertNull(response.getBody().getChairmanId());
-        verify(meetingService, times(1)).update(eq(companyId), eq(meetingId), any(MeetingDto.class));
     }
 }

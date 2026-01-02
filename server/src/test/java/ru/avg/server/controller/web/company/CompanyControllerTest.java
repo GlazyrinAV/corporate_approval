@@ -7,7 +7,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import ru.avg.server.model.dto.CompanyDto;
+import ru.avg.server.model.dto.company.CompanyDto;
+import ru.avg.server.model.dto.company.NewCompanyDto;
 import ru.avg.server.service.company.CompanyService;
 
 import java.util.List;
@@ -25,6 +26,8 @@ class CompanyControllerTest {
 
     private CompanyDto companyDto;
 
+    private NewCompanyDto newCompanyDto;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -35,15 +38,22 @@ class CompanyControllerTest {
                 .companyType("AO")
                 .hasBoardOfDirectors(true)
                 .build();
+
+        newCompanyDto = NewCompanyDto.builder()
+                .title("Test Company")
+                .inn(1234567890L)
+                .companyType("AO")
+                .hasBoardOfDirectors(true)
+                .build();
     }
 
     @Test
     void save_ShouldReturnCreatedStatusAndSavedCompany() {
         // Given
-        when(companyService.save(any(CompanyDto.class))).thenReturn(companyDto);
+        when(companyService.save(any(NewCompanyDto.class))).thenReturn(companyDto);
 
         // When
-        ResponseEntity<CompanyDto> response = companyController.save(companyDto);
+        ResponseEntity<CompanyDto> response = companyController.save(newCompanyDto);
 
         // Then
         assertNotNull(response);
@@ -51,7 +61,7 @@ class CompanyControllerTest {
         assertNotNull(response.getBody());
         assertEquals(companyDto.getId(), response.getBody().getId());
         assertEquals(companyDto.getTitle(), response.getBody().getTitle());
-        verify(companyService, times(1)).save(companyDto);
+        verify(companyService, times(1)).save(newCompanyDto);
     }
 
     @Test
@@ -132,7 +142,7 @@ class CompanyControllerTest {
     void update_ShouldReturnOkStatusAndUpdatedCompany() {
         // Given
         Integer companyId = 1;
-        CompanyDto updateDto = CompanyDto.builder()
+        NewCompanyDto updateDto = NewCompanyDto.builder()
                 .title("Updated Company")
                 .hasBoardOfDirectors(false)
                 .build();
@@ -143,7 +153,7 @@ class CompanyControllerTest {
                 .companyType("AO")
                 .hasBoardOfDirectors(false)
                 .build();
-        when(companyService.update(eq(companyId), any(CompanyDto.class))).thenReturn(updatedCompany);
+        when(companyService.update(eq(companyId), any(NewCompanyDto.class))).thenReturn(updatedCompany);
 
         // When
         ResponseEntity<CompanyDto> response = companyController.update(companyId, updateDto);
@@ -155,14 +165,14 @@ class CompanyControllerTest {
         assertEquals("Updated Company", response.getBody().getTitle());
         assertFalse(response.getBody().getHasBoardOfDirectors());
         assertEquals(1234567890L, response.getBody().getInn());
-        verify(companyService, times(1)).update(eq(companyId), any(CompanyDto.class));
+        verify(companyService, times(1)).update(eq(companyId), any(NewCompanyDto.class));
     }
 
     @Test
     void update_ShouldAllowPartialUpdateWithNullValues() {
         // Given
         Integer companyId = 1;
-        CompanyDto updateDto = CompanyDto.builder()
+        NewCompanyDto updateDto = NewCompanyDto.builder()
                 .hasBoardOfDirectors(null)
                 .build();
         CompanyDto updatedCompany = CompanyDto.builder()
@@ -172,7 +182,7 @@ class CompanyControllerTest {
                 .companyType("AO")
                 .hasBoardOfDirectors(null)
                 .build();
-        when(companyService.update(eq(companyId), any(CompanyDto.class))).thenReturn(updatedCompany);
+        when(companyService.update(eq(companyId), any(NewCompanyDto.class))).thenReturn(updatedCompany);
 
         // When
         ResponseEntity<CompanyDto> response = companyController.update(companyId, updateDto);
@@ -182,7 +192,7 @@ class CompanyControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertNull(response.getBody().getHasBoardOfDirectors());
-        verify(companyService, times(1)).update(eq(companyId), any(CompanyDto.class));
+        verify(companyService, times(1)).update(eq(companyId), any(NewCompanyDto.class));
     }
 
     @Test

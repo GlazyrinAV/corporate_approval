@@ -9,7 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.avg.server.model.dto.ParticipantDto;
+import ru.avg.server.model.dto.participant.NewParticipantDto;
+import ru.avg.server.model.dto.participant.ParticipantDto;
 import ru.avg.server.service.participant.ParticipantService;
 
 import java.util.List;
@@ -19,6 +20,15 @@ import java.util.List;
  * All operations are scoped by {companyId} to enforce access control and data ownership.
  * Provides standard CRUD endpoints for participant management including creation, retrieval,
  * partial update, and deletion of participants.
+ * <p>
+ * This controller handles HTTP requests and delegates business logic to {@link ParticipantService}.
+ * It includes comprehensive logging for monitoring and debugging purposes, with different log levels
+ * for different types of operations (info for mutations, debug for queries, warn for deletions).
+ * </p>
+ *
+ * @author AVG
+ * @see ParticipantService
+ * @since 1.0
  */
 @RestController
 @RequestMapping("/approval/{companyId}/participant")
@@ -26,6 +36,17 @@ import java.util.List;
 @Slf4j
 public class ParticipantController {
 
+    /**
+     * Service responsible for handling business logic related to participant management.
+     * This dependency is injected by Spring using constructor injection (enabled by {@link RequiredArgsConstructor})
+     * and provides all necessary operations for creating, reading, updating, and deleting participants.
+     * <p>
+     * The service encapsulates data access, validation, and business rules, allowing this controller
+     * to focus solely on request handling, parameter binding, and response construction.
+     * </p>
+     *
+     * @see ParticipantService
+     */
     private final ParticipantService participantService;
 
     /**
@@ -37,7 +58,7 @@ public class ParticipantController {
      */
     @Operation(summary = "Get all participants", description = "Retrieves all participants associated with a specific company")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Successfully retrieved list of participants")
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved list of participants")
     })
     @GetMapping
     public ResponseEntity<List<ParticipantDto>> findAll(@PathVariable Integer companyId) {
@@ -51,21 +72,21 @@ public class ParticipantController {
      * The participant data is validated using Jakarta Validation annotations before being persisted.
      * If validation fails, a MethodArgumentNotValidException will be thrown.
      *
-     * @param companyId      the ID of the company for which the participant is being created
-     * @param participantDto the ParticipantDto containing the data for the new participant
+     * @param companyId         the ID of the company for which the participant is being created
+     * @param newParticipantDto the NewParticipantDto containing the data for the new participant
      * @return ResponseEntity with HTTP 201 CREATED status and the saved ParticipantDto including generated ID
      */
     @Operation(summary = "Create participant", description = "Creates a new participant within the specified company")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "Participant created successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid input")
+            @ApiResponse(responseCode = "201", description = "Participant created successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     @PostMapping
     public ResponseEntity<ParticipantDto> save(
             @PathVariable Integer companyId,
-            @Valid @RequestBody ParticipantDto participantDto) {
-        log.info("Request to create participant for companyId={}: {}", companyId, participantDto);
-        ParticipantDto savedParticipant = participantService.save(companyId, participantDto);
+            @Valid @RequestBody NewParticipantDto newParticipantDto) {
+        log.info("Request to create participant for companyId={}: {}", companyId, newParticipantDto);
+        ParticipantDto savedParticipant = participantService.save(companyId, newParticipantDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedParticipant);
     }
 
@@ -79,8 +100,8 @@ public class ParticipantController {
      */
     @Operation(summary = "Get participant by ID", description = "Retrieves a specific participant by their unique identifier within the context of a company")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Successfully retrieved the participant"),
-        @ApiResponse(responseCode = "404", description = "Participant not found")
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved the participant"),
+            @ApiResponse(responseCode = "404", description = "Participant not found")
     })
     @GetMapping("/{participantId}")
     public ResponseEntity<ParticipantDto> findById(
@@ -98,20 +119,20 @@ public class ParticipantController {
      *
      * @param companyId         the ID of the company to which the participant belongs
      * @param participantId     the ID of the participant to update
-     * @param newParticipantDto the ParticipantDto containing the fields to update
+     * @param newParticipantDto the NewParticipantDto containing the fields to update
      * @return ResponseEntity with HTTP 200 OK status and the updated ParticipantDto
      */
     @Operation(summary = "Update participant", description = "Partially updates an existing participant identified by ID within the company context")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Participant updated successfully"),
-        @ApiResponse(responseCode = "404", description = "Participant not found"),
-        @ApiResponse(responseCode = "400", description = "Invalid input")
+            @ApiResponse(responseCode = "200", description = "Participant updated successfully"),
+            @ApiResponse(responseCode = "404", description = "Participant not found"),
+            @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     @PatchMapping("/{participantId}")
     public ResponseEntity<ParticipantDto> update(
             @PathVariable Integer companyId,
             @PathVariable Integer participantId,
-            @Valid @RequestBody ParticipantDto newParticipantDto) {
+            @Valid @RequestBody NewParticipantDto newParticipantDto) {
         log.info("Request to update participant id={} for companyId={}: {}", participantId, companyId, newParticipantDto);
         ParticipantDto updatedParticipant = participantService.update(companyId, participantId, newParticipantDto);
         return ResponseEntity.ok(updatedParticipant);
@@ -128,8 +149,8 @@ public class ParticipantController {
      */
     @Operation(summary = "Delete participant", description = "Deletes a participant identified by their ID within the company context")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "204", description = "Participant deleted successfully"),
-        @ApiResponse(responseCode = "404", description = "Participant not found")
+            @ApiResponse(responseCode = "204", description = "Participant deleted successfully"),
+            @ApiResponse(responseCode = "404", description = "Participant not found")
     })
     @DeleteMapping("/{participantId}")
     public ResponseEntity<Void> removeById(

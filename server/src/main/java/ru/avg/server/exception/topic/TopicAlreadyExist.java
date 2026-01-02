@@ -4,6 +4,12 @@ package ru.avg.server.exception.topic;
  * Exception thrown when attempting to create a topic that already exists.
  * This exception does not carry additional context (e.g., topic ID or title),
  * and is intended for simple cases where only a generic conflict message is needed.
+ * </p>
+ *
+ * @see RuntimeException
+ * @see ru.avg.server.model.topic.Topic
+ * @author AVG
+ * @since 1.0
  */
 public class TopicAlreadyExist extends RuntimeException {
 
