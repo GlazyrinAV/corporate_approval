@@ -4,16 +4,19 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.avg.server.model.dto.company.CompanyDto;
 import ru.avg.server.model.dto.company.NewCompanyDto;
 import ru.avg.server.service.company.CompanyService;
-
-import java.util.Collection;
 
 /**
  * REST controller for managing company resources.
@@ -33,6 +36,7 @@ import java.util.Collection;
 @RequestMapping("/approval/company")
 @RequiredArgsConstructor
 @Slf4j
+@Validated
 public class CompanyController {
 
     /**
@@ -88,60 +92,81 @@ public class CompanyController {
     }
 
     /**
-     * Retrieves a collection of all existing companies.
+     * Retrieves a paginated list of all companies.
      * <p>
-     * This endpoint returns a list of all companies stored in the system. It is used to
-     * obtain an overview of all available companies for administrative or selection purposes.
+     * This endpoint returns a subset of companies based on the provided pagination parameters.
+     * It supports large datasets by allowing clients to request specific pages of results.
      * The operation is read-only and does not modify any data.
      * </p>
+     * <p>
+     * The response includes full pagination metadata such as total elements, total pages,
+     * current page number, and page size, enabling clients to navigate through the dataset effectively.
+     * Results are sorted by company title in ascending order.
+     * </p>
      *
-     * @return a ResponseEntity containing a collection of {@link CompanyDto} objects
-     * representing all companies, with HTTP status 200 (OK)
-     * @see CompanyService#findAll()
+     * @param page  the zero-based page number to retrieve; must be non-negative (default: 0)
+     * @param limit the maximum number of elements to return per page; must be between 1 and 50 (inclusive, default: 10)
+     * @return a ResponseEntity containing a {@link Page} of {@link CompanyDto} objects representing
+     * the requested page of companies, with HTTP status 200 (OK)
+     * @see CompanyService#findAll(Integer, Integer)
      * @see CompanyDto
+     * @see Page
      */
-    @Operation(summary = "Get all companies", description = "Retrieves a collection of all existing companies")
+    @Operation(summary = "Get all companies with pagination",
+            description = "Retrieves a paginated list of all existing companies with full pagination metadata")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved list of companies")
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved page of companies"),
+            @ApiResponse(responseCode = "400", description = "Invalid pagination parameters (page < 0 or limit not in 1-50 range)")
     })
     @GetMapping
-    public ResponseEntity<Collection<CompanyDto>> findAll() {
-        log.debug("Finding all companies");
-        Collection<CompanyDto> companies = companyService.findAll();
+    public ResponseEntity<Page<CompanyDto>> findAll(
+            @RequestParam(defaultValue = "0") @Min(0) Integer page,
+            @RequestParam(defaultValue = "10") @Min(1) @Max(50) Integer limit) {
+        log.debug("Fetching companies - page: {}, limit: {}", page, limit);
+        Page<CompanyDto> companies = companyService.findAll(page, limit);
         return ResponseEntity.ok(companies);
     }
 
     /**
-     * Searches for companies based on the provided search criteria.
+     * Searches for companies based on a given criteria with pagination support.
      * <p>
-     * This endpoint performs a case-insensitive partial match search across company data,
-     * specifically targeting the company title (name) and INN (Individual Taxpayer Number).
-     * If the criteria parameter is not provided or is empty, all companies may be returned
-     * depending on service implementation.
+     * This endpoint performs a case-insensitive partial match search on company data,
+     * specifically targeting fields such as company title and INN (Individual Taxpayer Number).
+     * The search results are returned in a paginated format to support efficient handling
+     * of large datasets and improve performance.
      * </p>
      * <p>
-     * The search is typically used in UI components such as autocomplete fields or search tables,
-     * allowing users to locate companies by name or tax identifier. The operation is read-only
-     * and does not modify any data.
+     * If the search criteria is empty or not provided, the method returns an empty page
+     * to prevent unintended retrieval of all company records. The maximum length of the
+     * search string is limited to 100 characters to prevent abuse and ensure system stability.
      * </p>
      *
      * @param criteria the search string to match against company titles and INNs;
-     *                 optional, defaults to empty string when not provided
-     * @return a ResponseEntity containing a collection of {@link CompanyDto} objects
-     * representing companies that match the search criteria, with HTTP status 200 (OK)
-     * @see CompanyService#findByCriteria(String)
+     *                 optional, defaults to empty string if not provided;
+     *                 maximum length is 100 characters
+     * @param page     the zero-based page number to retrieve; must be non-negative (default: 0)
+     * @param limit    the maximum number of elements to return per page; must be between 1 and 50 (inclusive, default: 10)
+     * @return a ResponseEntity containing a {@link Page} of {@link CompanyDto} objects representing
+     * the companies matching the search criteria for the requested page,
+     * including full pagination metadata (total elements, total pages, etc.),
+     * with HTTP status 200 (OK)
+     * @see CompanyService#findByCriteria(String, Integer, Integer)
      * @see CompanyDto
+     * @see Page
      */
-    @Operation(summary = "Search companies by criteria",
-            description = "Finds companies by partial match on title or INN (case-insensitive)")
+    @Operation(summary = "Search companies by criteria with pagination",
+            description = "Finds companies by partial match on title or INN (case-insensitive) with pagination support")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved list of matching companies")
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved page of matching companies"),
+            @ApiResponse(responseCode = "400", description = "Invalid pagination parameters (page < 0 or limit not in 1-50 range) or criteria exceeds 100 characters")
     })
-    @GetMapping
-    public ResponseEntity<Collection<CompanyDto>> findByCriteria(
-            @RequestParam(required = false, defaultValue = "") String criteria) {
-        log.debug("Finding company by criteria: {}", criteria);
-        Collection<CompanyDto> companies = companyService.findByCriteria(criteria);
+    @GetMapping("/search")
+    public ResponseEntity<Page<CompanyDto>> findByCriteria(
+            @RequestParam(required = false, defaultValue = "") @Size(max = 100) String criteria,
+            @RequestParam(defaultValue = "0") @Min(0) Integer page,
+            @RequestParam(defaultValue = "10") @Min(1) @Max(50) Integer limit) {
+        log.debug("Finding companies by criteria with pagination(page: {}, limit: {}): {}", page, limit, criteria);
+        Page<CompanyDto> companies = companyService.findByCriteria(criteria, page, limit);
         return ResponseEntity.ok(companies);
     }
 

@@ -1,7 +1,10 @@
-package ru.avg.server.service.company.iplm;
+package ru.avg.server.service.company.impl;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.avg.server.exception.company.CompanyNotFound;
 import ru.avg.server.model.company.Company;
@@ -12,10 +15,6 @@ import ru.avg.server.model.dto.company.mapper.NewCompanyMapper;
 import ru.avg.server.repository.company.CompanyRepository;
 import ru.avg.server.service.company.CompanyService;
 import ru.avg.server.utils.updater.Updater;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * Implementation of {@link CompanyService} providing business logic for managing company entities.
@@ -113,7 +112,7 @@ public class CompanyServiceImpl implements CompanyService {
      * Deletes a company by its ID.
      * Uses a custom repository method to avoid loading the entity first.
      * <p>The operation is wrapped in a transaction to ensure atomicity.
-     * First checks if the company exists; if not, throws an exception.
+     * First checks if the company exists; if not, throw an exception.
      * Otherwise, performs deletion using a direct delete-by-ID method.</p>
      *
      * @param companyId the ID of the company to delete
@@ -149,51 +148,105 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     /**
-     * Retrieves all companies from the database.
-     * <p>Fetches all company records, maps each entity to a DTO, and returns them as a list.
-     * Returns an empty list if no companies exist — never returns null.</p>
+     * Retrieves a paginated list of all companies sorted by title in ascending order.
+     * <p>
+     * This method fetches companies from the data source using pagination to support large datasets
+     * and improve performance. The actual retrieval and sorting are applied at the database level
+     * through the repository layer, ensuring efficient query execution.
+     * </p>
+     * <p>
+     * Pagination is handled using page number and page size (limit) strategy. The {@code page} parameter
+     * represents the zero-based page index to retrieve, and {@code limit} defines the maximum number
+     * of results per page. This aligns directly with Spring Data's native pagination model.
+     * </p>
+     * <p>
+     * The resulting page of company entities is transformed into a page of data transfer objects (DTOs)
+     * using the {@link CompanyMapper#toDto(Company)} function. The mapping preserves all pagination
+     * metadata such as total elements, total pages, current page number, and page size.
+     * </p>
      *
-     * @return a list of CompanyDto objects; never null (maybe empty)
-     * @see CompanyRepository#findAll()
+     * @param page  the zero-based page number to retrieve; must be non-negative
+     * @param limit the maximum number of elements to return per page; must be between 1 and 50 (inclusive)
+     * @return a {@link Page} of {@link CompanyDto} objects containing all companies for the requested page,
+     * including full pagination metadata and sorted by title in ascending order
+     * @throws IllegalArgumentException if page is negative or limit is not in valid range (1-50)
+     * @see CompanyRepository#findAllByOrderByTitleAsc(Pageable)
      * @see CompanyMapper#toDto(Company)
+     * @see PageRequest#of(int, int)
      */
     @Override
-    public List<CompanyDto> findAll() {
-        return storage.findAll().stream()
-                .map(companyMapper::toDto)
-                .toList();
+    public Page<CompanyDto> findAll(Integer page, Integer limit) {
+        checkPagination(page, limit);
+
+        Pageable pageable = PageRequest.of(page, limit);
+
+        // Fetch all companies with pagination and map entities to DTOs preserving metadata
+        return storage.findAllByOrderByTitleAsc(pageable).map(companyMapper::toDto);
     }
 
     /**
-     * Retrieves a collection of companies that match the specified search criteria.
+     * Retrieves a paginated list of companies that match the specified search criteria.
      * <p>
-     * This method performs a search operation to find companies whose title or INN
-     * (Individual Taxpayer Number) contains the given criteria string. The search is
-     * case-insensitive and supports partial matching. If the criteria is null or blank,
-     * an empty list is returned to prevent unintended full dataset retrieval.
+     * This method performs a case-insensitive partial match search on company data (e.g., title, INN).
+     * The search is applied at the database level to ensure efficient execution, especially for large datasets.
      * </p>
      * <p>
-     * The search is delegated to the {@link CompanyRepository#findByCriteria(String)} method,
-     * which executes a JPQL query against the database filtering by title and INN fields.
-     * The resulting entities are then converted to data transfer objects ({@link CompanyDto})
-     * using the {@link CompanyMapper#toDto(Company)} method.
+     * Pagination is handled using a zero-based page index and a page size (limit). The result includes
+     * full pagination metadata such as total number of elements, total pages, current page number, and page size.
+     * </p>
+     * <p>
+     * If the search criteria is {@code null} or blank, the method returns an empty page to prevent
+     * unintended retrieval of all company records. For valid criteria, only companies matching the search
+     * are returned.
      * </p>
      *
-     * @param criteria the search string to match against company titles and INNs;
-     *                 if null or blank, an empty collection is returned
-     * @return a collection of {@link CompanyDto} objects representing companies that match
-     * the search criteria; never {@code null}, but may be empty if no matches are found
-     * @see ru.avg.server.repository.company.CompanyRepository#findByCriteria(String)
-     * @see CompanyDto
+     * @param criteria the search string to match against company fields such as title or INN;
+     *                 if {@code null} or blank, an empty page is returned
+     * @param page     the zero-based page number to retrieve; must be non-negative
+     * @param limit    the maximum number of elements to return per page; must be between 1 and 50 (inclusive)
+     * @return a {@link Page} of {@link CompanyDto} objects containing the companies that match the
+     * search criteria for the requested page, including full pagination metadata
+     * @throws IllegalArgumentException if {@code page} is negative or {@code limit} is not in the valid range (1–50)
+     * @see CompanyRepository#findByCriteria(String, Pageable)
      * @see CompanyMapper#toDto(Company)
+     * @see PageRequest#of(int, int)
      */
     @Override
-    public Collection<CompanyDto> findByCriteria(String criteria) {
+    public Page<CompanyDto> findByCriteria(String criteria, Integer page, Integer limit) {
+        checkPagination(page, limit);
+
+        // Return empty page for null or blank criteria to prevent unintended full dataset retrieval
         if (criteria == null || criteria.isBlank()) {
-            return new ArrayList<>();
+            return Page.empty(PageRequest.of(page, limit));
         }
-        return storage.findByCriteria(criteria).stream()
-                .map(companyMapper::toDto)
-                .toList();
+
+        Pageable pageable = PageRequest.of(page, limit);
+
+        // Delegate to repository for database-level filtering and pagination
+        Page<Company> companyPage = storage.findByCriteria(criteria, pageable);
+
+        // Transform entities to DTOs while preserving pagination metadata
+        return companyPage.map(companyMapper::toDto);
+    }
+
+    /**
+     * Validates pagination parameters to ensure they are within acceptable ranges.
+     * <p>
+     * This helper method checks that the page number is non-negative and the limit (page size)
+     * is between 1 and 50 (inclusive). If validation fails, an IllegalArgumentException is thrown.
+     * </p>
+     *
+     * @param page  the zero-based page number to validate; must be non-negative
+     * @param limit the number of elements per page to validate; must be between 1 and 50 (inclusive)
+     * @throws IllegalArgumentException if page is negative or limit is not in valid range (1-50)
+     */
+    private void checkPagination(Integer page, Integer limit) {
+        // Validate input parameters
+        if (page == null || page < 0) {
+            throw new IllegalArgumentException("Page must be non-negative");
+        }
+        if (limit == null || limit < 1 || limit > 50) {
+            throw new IllegalArgumentException("Limit must be between 1 and 50");
+        }
     }
 }

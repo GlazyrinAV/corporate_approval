@@ -1,5 +1,6 @@
 package ru.avg.server.service.participant;
 
+import org.springframework.data.domain.Page;
 import ru.avg.server.model.dto.participant.NewParticipantDto;
 import ru.avg.server.model.dto.participant.ParticipantDto;
 import ru.avg.server.model.meeting.MeetingType;
@@ -128,7 +129,7 @@ public interface ParticipantService {
      * @return a list of ParticipantDto objects representing all participants for the company; never null
      * @throws ru.avg.server.exception.company.CompanyNotFound if the specified company does not exist
      */
-    List<ParticipantDto> findAll(Integer companyId);
+    Page<ParticipantDto> findAll(Integer companyId, Integer page, Integer limit);
 
     /**
      * Retrieves a specific participant by its unique identifier within a company context.
@@ -145,4 +146,36 @@ public interface ParticipantService {
      * @throws ru.avg.server.exception.participant.ParticipantNotFound if the specified participant does not exist
      */
     ParticipantDto findById(Integer companyId, Integer participantId);
+
+    /**
+     * Retrieves a paginated list of participants matching the specified search criteria within a given company.
+     * <p>
+     * This method performs a case-insensitive partial match search on participant data such as name or position,
+     * filtering only those participants associated with the specified company. The search is applied at the
+     * data access layer to ensure efficient execution, especially for large datasets.
+     * </p>
+     * <p>
+     * Pagination is supported through page number and page limit parameters. The result includes full pagination
+     * metadata such as total number of elements, total pages, current page number, and page limit, enabling
+     * clients to navigate through results effectively.
+     * </p>
+     * <p>
+     * If the search criteria is {@code null} or blank, the method returns all participants belonging to the
+     * specified company (subject to pagination).
+     * </p>
+     *
+     * @param companyId the unique identifier of the company to which participants must belong;
+     *                  must not be {@code null} and must represent an existing company
+     * @param criteria  the search string to match against participant fields such as name or position;
+     *                  if {@code null} or blank, all participants within the company are returned (paginated)
+     * @param page      the zero-based page number to retrieve; must be non-negative
+     * @param limit     the maximum number of elements to return per page; must be between 1 and a reasonable upper limit
+     *                  (e.g., 20 or 50, enforced by the implementation)
+     * @return a {@link Page} of {@link ParticipantDto} objects containing the matching participants for the requested page,
+     * including full pagination metadata
+     * @throws IllegalArgumentException if {@code page} is negative or {@code limit} is not positive
+     * @see ParticipantDto
+     * @see Page
+     */
+    Page<ParticipantDto> findByCriteria(Integer companyId, String criteria, Integer page, Integer limit);
 }

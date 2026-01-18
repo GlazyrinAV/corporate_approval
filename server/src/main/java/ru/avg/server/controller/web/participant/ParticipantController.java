@@ -4,16 +4,18 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.avg.server.model.dto.participant.NewParticipantDto;
 import ru.avg.server.model.dto.participant.ParticipantDto;
 import ru.avg.server.service.participant.ParticipantService;
-
-import java.util.List;
 
 /**
  * REST controller for managing participants within a company context.
@@ -50,20 +52,40 @@ public class ParticipantController {
     private final ParticipantService participantService;
 
     /**
-     * Retrieves all participants associated with a specific company.
-     * This endpoint returns a complete list of participants for the given company.
+     * Retrieves a paginated list of all participants belonging to a specific company.
+     * <p>
+     * This endpoint returns a subset of participants based on the provided pagination parameters.
+     * It supports large datasets by allowing clients to request specific pages of results.
+     * The operation is read-only and does not modify any data.
+     * </p>
+     * <p>
+     * The response includes full pagination metadata such as total elements, total pages,
+     * current page number, and page size, enabling clients to navigate through the dataset effectively.
+     * </p>
      *
-     * @param companyId the ID of the company for which to retrieve all participants
-     * @return ResponseEntity with HTTP 200 OK status containing a list of ParticipantDto objects
+     * @param companyId the unique identifier of the company whose participants are to be retrieved;
+     *                  must correspond to an existing company
+     * @param page      the zero-based page number to retrieve; must be non-negative (default: 0)
+     * @param limit     the maximum number of elements to return per page; must be between 1 and 20 (inclusive, default: 10)
+     * @return a ResponseEntity containing a {@link Page} of {@link ParticipantDto} objects representing
+     * the requested page of participants, with HTTP status 200 (OK)
+     * @see ParticipantService#findAll(Integer, Integer, Integer)
+     * @see ParticipantDto
+     * @see Page
      */
-    @Operation(summary = "Get all participants", description = "Retrieves all participants associated with a specific company")
+    @Operation(summary = "Get all participants of a company with pagination",
+            description = "Retrieves a paginated list of all participants belonging to a specific company")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved list of participants")
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved page of participants"),
+            @ApiResponse(responseCode = "400", description = "Invalid pagination parameters (page < 0 or limit not in 1-20 range)"),
+            @ApiResponse(responseCode = "404", description = "Company not found")
     })
     @GetMapping
-    public ResponseEntity<List<ParticipantDto>> findAll(@PathVariable Integer companyId) {
+    public ResponseEntity<Page<ParticipantDto>> findAll(@PathVariable Integer companyId,
+                                                        @RequestParam(defaultValue = "0") @Min(0) Integer page,
+                                                        @RequestParam(defaultValue = "10") @Min(1) @Max(20) Integer limit) {
         log.debug("Request to get all participants for companyId={}", companyId);
-        List<ParticipantDto> participants = participantService.findAll(companyId);
+        Page<ParticipantDto> participants = participantService.findAll(companyId, page, limit);
         return ResponseEntity.ok(participants);
     }
 
@@ -159,5 +181,49 @@ public class ParticipantController {
         log.warn("Request to delete participant id={} for companyId={}", participantId, companyId);
         participantService.delete(companyId, participantId);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Searches for participants within a specific company based on search criteria with pagination support.
+     * <p>
+     * This endpoint performs a case-insensitive partial match search on participant data (e.g., name, position)
+     * that belongs to the specified company. The results are returned in a paginated format to support
+     * efficient handling of large datasets and improve performance.
+     * </p>
+     * <p>
+     * If the search criteria is empty or not provided, the method returns a paginated list of all participants
+     * belonging to the company (subject to pagination). The maximum length of the search string is limited
+     * to 50 characters to prevent abuse and ensure system stability.
+     * </p>
+     *
+     * @param companyId the unique identifier of the company to which participants must belong;
+     *                  must be a valid positive integer
+     * @param criteria  the search string to match against participant names or other relevant fields;
+     *                  optional, defaults to empty string if not provided;
+     *                  maximum length is 50 characters
+     * @param page      the zero-based page number to retrieve; must be non-negative (default: 0)
+     * @param limit     the maximum number of elements to return per page; must be between 1 and 20 (inclusive, default: 10)
+     * @return a ResponseEntity containing a {@link Page} of {@link ParticipantDto} objects representing
+     * participants matching the search criteria within the specified company, including full
+     * pagination metadata (total elements, total pages, etc.), with HTTP status 200 (OK)
+     * @see ParticipantService#findByCriteria(Integer, String, Integer, Integer)
+     * @see ParticipantDto
+     */
+    @Operation(summary = "Search participants by criteria within a company",
+            description = "Finds participants in a specific company by partial match on name or other fields with pagination support")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved page of matching participants"),
+            @ApiResponse(responseCode = "400", description = "Invalid pagination parameters (page < 0 or limit not in 1-20 range) or criteria exceeds 50 characters"),
+            @ApiResponse(responseCode = "404", description = "Company not found")
+    })
+    @GetMapping("/search")
+    public ResponseEntity<Page<ParticipantDto>> findByCriteria(
+            @PathVariable Integer companyId,
+            @RequestParam(required = false, defaultValue = "") @Size(max = 50) String criteria,
+            @RequestParam(defaultValue = "0") @Min(0) Integer page,
+            @RequestParam(defaultValue = "10") @Min(1) @Max(20) Integer limit) {
+        log.debug("Request to find participants by criteria={} for companyId={} with page={} and limit={}",
+                criteria, companyId, page, limit);
+        return ResponseEntity.ok(participantService.findByCriteria(companyId, criteria, page, limit));
     }
 }

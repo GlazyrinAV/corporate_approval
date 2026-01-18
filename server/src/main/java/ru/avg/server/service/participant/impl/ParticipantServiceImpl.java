@@ -2,6 +2,9 @@ package ru.avg.server.service.participant.impl;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.avg.server.exception.participant.ParticipantAlreadyExist;
 import ru.avg.server.exception.participant.ParticipantNotFound;
@@ -114,7 +117,7 @@ public class ParticipantServiceImpl implements ParticipantService {
      */
     @Override
     public ParticipantDto save(Integer companyId, NewParticipantDto newParticipantDto) {
-        verifier.verifyCompanyAndMeeting(companyId, null);
+        verifier.verifyCompany(companyId);
         return participantMapper.toDto(
                 participantRepository.save(newParticipantMapper.fromDto(newParticipantDto))
         );
@@ -147,7 +150,7 @@ public class ParticipantServiceImpl implements ParticipantService {
     @Override
     @Transactional
     public ParticipantDto update(Integer companyId, Integer participantId, NewParticipantDto newParticipantDto) {
-        verifier.verifyCompanyAndMeeting(companyId, null);
+        verifier.verifyCompany(companyId);
 
         Participant existingParticipant = participantRepository.findById(participantId)
                 .orElseThrow(() -> new ParticipantNotFound(participantId));
@@ -189,7 +192,7 @@ public class ParticipantServiceImpl implements ParticipantService {
      */
     @Override
     public void delete(Integer companyId, Integer participantId) {
-        verifier.verifyCompanyAndMeeting(companyId, null);
+        verifier.verifyCompany(companyId);
 
         boolean hasActiveMeetings = meetingParticipantRepository.findByParticipantId(participantId).stream()
                 .map(meetingParticipantMapper::toDto)
@@ -217,7 +220,7 @@ public class ParticipantServiceImpl implements ParticipantService {
      */
     @Override
     public ParticipantDto find(String name, Integer companyId, ParticipantType type) {
-        verifier.verifyCompanyAndMeeting(companyId, null);
+        verifier.verifyCompany(companyId);
         return participantMapper.toDto(
                 participantRepository.findByNameAndCompanyIdAndType(name, companyId, type)
                         .orElseThrow(() -> new ParticipantNotFound(name))
@@ -239,7 +242,7 @@ public class ParticipantServiceImpl implements ParticipantService {
      */
     @Override
     public List<ParticipantDto> findAllByMeetingType(Integer companyId, MeetingType type) {
-        verifier.verifyCompanyAndMeeting(companyId, null);
+        verifier.verifyCompany(companyId);
 
         return participantRepository.findAllByCompanyId(companyId).stream()
                 .filter(participant -> {
@@ -254,17 +257,36 @@ public class ParticipantServiceImpl implements ParticipantService {
     }
 
     /**
-     * Retrieves all participants for a company.
+     * Retrieves all participants for a company with pagination support.
+     * <p>
+     * This method retrieves a paginated list of participants associated with the specified company.
+     * The company's existence is verified before proceeding with the query. The results are sorted
+     * by participant name in ascending order. Pagination is applied at the database level to ensure
+     * efficient handling of large datasets.
+     * </p>
      *
-     * @param companyId the ID of the company
-     * @return list of all ParticipantDto objects for the company
+     * @param companyId the unique identifier of the company whose participants are to be retrieved;
+     *                  must not be {@code null} and must represent an existing company
+     * @param page      the zero-based page number to retrieve; must be non-negative
+     * @param limit     the maximum number of elements to return per page; must be between 1 and 20 (inclusive)
+     * @return a {@link Page} of {@link ParticipantDto} objects containing the participants for the requested page,
+     * including full pagination metadata (total elements, total pages, etc.)
+     * @throws IllegalArgumentException                        if page is negative or limit is not in valid range (1-20)
+     * @throws ru.avg.server.exception.company.CompanyNotFound if the specified {@code companyId} does not exist
+     * @see ParticipantRepository#findAllByCompanyId(Integer, Pageable)
+     * @see ParticipantMapper#toDto(Participant)
+     * @see PageRequest#of(int, int)
      */
     @Override
-    public List<ParticipantDto> findAll(Integer companyId) {
-        verifier.verifyCompanyAndMeeting(companyId, null);
-        return participantRepository.findAllByCompanyId(companyId).stream()
-                .map(participantMapper::toDto)
-                .toList();
+    public Page<ParticipantDto> findAll(Integer companyId, Integer page, Integer limit) {
+        verifier.verifyCompany(companyId);
+
+        checkPagination(page, limit);
+
+        Pageable pageable = PageRequest.of(page, limit);
+
+        return participantRepository.findAllByCompanyId(companyId, pageable)
+                .map(participantMapper::toDto);
     }
 
     /**
@@ -277,10 +299,82 @@ public class ParticipantServiceImpl implements ParticipantService {
      */
     @Override
     public ParticipantDto findById(Integer companyId, Integer participantId) {
-        verifier.verifyCompanyAndMeeting(companyId, null);
+        verifier.verifyCompany(companyId);
         return participantMapper.toDto(
                 participantRepository.findById(participantId)
                         .orElseThrow(() -> new ParticipantNotFound(participantId))
         );
+    }
+
+    /**
+     * Retrieves a paginated list of participants matching the specified search criteria within a given company.
+     * <p>
+     * This method performs a case-insensitive partial match search on participant data such as name,
+     * filtering only those participants associated with the specified company. The existence of the company is
+     * verified before proceeding with the search using the {@link Verifier#verifyCompany(Integer)} method.
+     * If the company does not exist or the ID is null, an exception is thrown.
+     * </p>
+     * <p>
+     * Pagination is handled using page number and page size (limit) strategy. The {@code page} parameter
+     * represents the zero-based page index to retrieve, and {@code limit} defines the maximum number
+     * of results per page. This aligns directly with Spring Data's native pagination model.
+     * </p>
+     * <p>
+     * If the search criteria is {@code null} or blank, the method returns an empty page to prevent unintended
+     * retrieval of all participants within the company. For valid criteria, the result includes full pagination
+     * metadata such as total elements, total pages, current page number, and page size.
+     * </p>
+     *
+     * @param companyId the unique identifier of the company to which participants must belong;
+     *                  must not be {@code null} and must represent an existing company
+     * @param criteria  the search string to match against participant fields such as name;
+     *                  if {@code null} or blank, an empty page is returned
+     * @param page      the zero-based page number to retrieve; must be non-negative
+     * @param limit     the maximum number of elements to return per page; must be between 1 and 20 (inclusive)
+     * @return a {@link Page} of {@link ParticipantDto} objects containing the matching participants for the
+     * requested page, including full pagination metadata
+     * @throws IllegalArgumentException                        if page is negative, limit is not in the valid range (1-20),
+     *                                                         or companyId is null
+     * @throws ru.avg.server.exception.company.CompanyNotFound if the specified {@code companyId} does not correspond to any existing company
+     * @see ParticipantRepository#findByCriteria(Integer, String, Pageable)
+     * @see ParticipantMapper#toDto(Participant)
+     * @see PageRequest#of(int, int)
+     * @see Verifier#verifyCompany(Integer)
+     */
+    @Override
+    public Page<ParticipantDto> findByCriteria(Integer companyId, String criteria, Integer page, Integer limit) {
+        verifier.verifyCompany(companyId);
+
+        checkPagination(page, limit);
+
+        // Return empty page for null or blank criteria to prevent unintended full dataset retrieval
+        if (criteria == null || criteria.isBlank()) {
+            return Page.empty(PageRequest.of(page, limit));
+        }
+
+        Pageable pageable = PageRequest.of(page, limit);
+
+        return participantRepository.findByCriteria(companyId, criteria, pageable).map(participantMapper::toDto);
+    }
+
+    /**
+     * Validates pagination parameters to ensure they are within acceptable ranges.
+     * <p>
+     * This helper method checks that the page number is non-negative and the limit (page size)
+     * is between 1 and 20 (inclusive). If validation fails, an IllegalArgumentException is thrown.
+     * </p>
+     *
+     * @param page  the zero-based page number to validate; must be non-negative
+     * @param limit the number of elements per page to validate; must be between 1 and 20 (inclusive)
+     * @throws IllegalArgumentException if page is negative or limit is not in valid range (1-20)
+     */
+    private void checkPagination(Integer page, Integer limit) {
+        // Validate input parameters
+        if (page == null || page < 0) {
+            throw new IllegalArgumentException("Page must be non-negative");
+        }
+        if (limit == null || limit < 1 || limit > 20) {
+            throw new IllegalArgumentException("Limit must be between 1 and 20");
+        }
     }
 }

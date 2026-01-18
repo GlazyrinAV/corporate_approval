@@ -1,9 +1,8 @@
 package ru.avg.server.service.company;
 
+import org.springframework.data.domain.Page;
 import ru.avg.server.model.dto.company.CompanyDto;
 import ru.avg.server.model.dto.company.NewCompanyDto;
-
-import java.util.Collection;
 
 /**
  * Service interface defining operations for managing company entities within the application.
@@ -16,7 +15,7 @@ import java.util.Collection;
  * </p>
  *
  * @author AVG
- * @see ru.avg.server.service.company.iplm.CompanyServiceImpl
+ * @see ru.avg.server.service.company.impl.CompanyServiceImpl
  * @since 1.0
  */
 public interface CompanyService {
@@ -86,53 +85,59 @@ public interface CompanyService {
      * @param companyId the unique identifier of the company to retrieve; must be a positive integer
      * @return the {@link CompanyDto} instance representing the found company
      * @throws ru.avg.server.exception.company.CompanyNotFound if no company exists with the given {@code companyId}
-     * @see #findAll()
+     * @see #findAll(Integer, Integer)
      * @see ru.avg.server.model.dto.company.mapper.CompanyMapper#toDto(ru.avg.server.model.company.Company)
      */
     CompanyDto findById(Integer companyId);
 
     /**
-     * Retrieves a collection of all existing companies from the system.
+     * Retrieves a paginated list of all existing companies.
      * <p>
-     * This method returns a complete list of companies represented as {@link CompanyDto} objects.
-     * The operation is read-only and does not modify any data. It is typically used to obtain
-     * an overview of all available companies for administrative purposes, selection interfaces,
-     * or system initialization.
+     * This method returns a page of company data transfer objects (DTOs) based on the provided
+     * pagination parameters. It supports large datasets by allowing clients to request specific
+     * pages of results using zero-based page numbering and a configurable page size.
      * </p>
      * <p>
-     * The returned collection contains data transfer objects that encapsulate company information
-     * such as name, registration details, and other relevant attributes, without exposing
-     * internal entity structures.
+     * The actual data retrieval and pagination are handled at the database level to ensure
+     * efficient query execution and optimal performance.
      * </p>
      *
-     * @return a collection of {@link CompanyDto} objects representing all companies in the system;
-     * never {@code null}, but may be empty if no companies exist
+     * @param page  the zero-based page number to retrieve; must be non-negative
+     * @param limit the maximum number of elements to return per page; must be between 1 and 50 (inclusive)
+     * @return a {@link Page} of {@link CompanyDto} objects containing the companies for the requested page,
+     * including full pagination metadata such as total elements, total pages, current page number, and page size
+     * @throws IllegalArgumentException if page is negative or limit is not in the valid range (1-50)
+     * @see Page
      * @see CompanyDto
-     * @see ru.avg.server.controller.web.company.CompanyController#findAll()
      */
-    Collection<CompanyDto> findAll();
+    Page<CompanyDto> findAll(Integer page, Integer limit);
 
     /**
-     * Retrieves a collection of companies that match the specified search criteria.
+     * Searches for companies based on a given criteria with pagination support.
      * <p>
-     * This method performs a search operation across company data using the provided criteria.
-     * The search is typically applied to key identifying fields such as company name (title)
-     * and Individual Taxpayer Number (INN). The matching is performed in a case-insensitive
-     * manner and supports partial matches (e.g., substring matching).
+     * This method performs a case-insensitive partial match search on company data,
+     * specifically targeting fields such as company title and INN (Individual Taxpayer Number).
+     * The search results are returned in a paginated format to support efficient handling
+     * of large datasets.
      * </p>
      * <p>
-     * If the criteria is null or blank, the method returns an empty collection to prevent
-     * unintentional retrieval of all company records. The returned collection contains
-     * data transfer objects ({@link CompanyDto}) that encapsulate essential company information
-     * without exposing internal entity structure or persistence details.
+     * Pagination is applied using page-based indexing: the {@code page} parameter specifies
+     * the zero-based page number to retrieve, and {@code limit} defines the maximum number
+     * of elements per page. The result includes full pagination metadata such as total
+     * number of elements, total pages, current page number, and page size.
      * </p>
      *
-     * @param criteria the search string to match against company data; if null or blank,
-     *                 an empty collection is returned
-     * @return a collection of {@link CompanyDto} objects representing companies that match
-     * the search criteria; never {@code null}, but may be empty if no matches are found
+     * @param criteria the search string to match against company titles and INNs;
+     *                 if null or blank, the behavior is defined by the implementation
+     *                 (typically returns an empty page)
+     * @param page     the zero-based page number to retrieve; must be non-negative
+     * @param limit    the maximum number of elements to return per page; must be between 1 and 50 (inclusive)
+     * @return a {@link Page} of {@link CompanyDto} objects containing the companies that match
+     * the search criteria for the requested page, including full pagination metadata
+     * @throws IllegalArgumentException if page is negative or limit is not in the valid range (1-50)
+     * @see Page
      * @see CompanyDto
-     * @see ru.avg.server.controller.web.company.CompanyController#findByCriteria(String)
+     * @see ru.avg.server.service.company.impl.CompanyServiceImpl#findByCriteria(String, Integer, Integer)
      */
-    Collection<CompanyDto> findByCriteria(String criteria);
+    Page<CompanyDto> findByCriteria(String criteria, Integer page, Integer limit);
 }

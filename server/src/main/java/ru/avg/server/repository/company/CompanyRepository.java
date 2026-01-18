@@ -1,5 +1,7 @@
 package ru.avg.server.repository.company;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -7,7 +9,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ru.avg.server.model.company.Company;
 
-import java.util.Collection;
 import java.util.Optional;
 
 /**
@@ -59,30 +60,60 @@ public interface CompanyRepository extends JpaRepository<Company, Integer> {
     Optional<Company> findByInn(Long inn);
 
     /**
-     * Retrieves a collection of companies that match the specified search criteria.
+     * Finds companies that match the specified search criteria with pagination and sorting support.
      * <p>
-     * This method performs a case-insensitive search across company data, specifically
-     * searching in the company title (name) and INN (Individual Taxpayer Number).
-     * The search uses partial matching (LIKE with wildcards), so any company where
-     * the title or INN contains the criteria string (case-insensitive) will be returned.
+     * This method performs a case-insensitive partial match search on two key company attributes:
+     * the company title (name) and the INN (Individual Taxpayer Number). The search uses the SQL LIKE
+     * operator with wildcards on both sides ('%criteria%') to find matches anywhere within the field.
      * </p>
      * <p>
-     * The search is performed using a JPQL query that:
-     * <ul>
-     *   <li>Converts both the stored data and search criteria to lowercase for case-insensitive matching</li>
-     *   <li>Searches in both {@code title} and {@code inn} fields</li>
-     *   <li>Uses partial match (contains) via {@code concat('%', :criteria, '%')}</li>
-     * </ul>
+     * Results are filtered to include only those companies where either the title or INN contains
+     * the search string (case-insensitive). The results are then sorted alphabetically by title
+     * in ascending order (A to Z).
+     * </p>
+     * <p>
+     * Pagination is applied at the database level through the {@link Pageable} parameter,
+     * ensuring efficient retrieval and preventing performance issues with large datasets.
+     * The method returns a {@link Page} object that contains both the subset of entities
+     * for the requested page and metadata such as total element count and number of pages.
      * </p>
      *
-     * @param criteria the search string to match against company title and INN; must not be null
-     * @return a collection of {@link Company} entities that match the search criteria;
-     * never {@code null}, but may be empty if no matches are found
-     * @throws IllegalArgumentException if criteria is null
+     * @param criteria the search string to match against company title and INN fields;
+     *                 must not be null, though empty or blank values may be handled by the caller
+     * @param page     the pagination information including page number (zero-based) and page size;
+     *                 must not be {@code null}
+     * @return a {@link Page} of {@link Company} entities matching the search criteria,
+     * sorted by title in ascending order, with full pagination metadata
+     * @see Page
+     * @see Pageable
      * @see Company
-     * @since 1.0
      */
     @Query("SELECT Company AS C FROM Company WHERE " +
-            "(lower(C.title) like (concat('%', :criteria, '%'))) OR (lower(C.inn) like (concat('%', :criteria, '%')))")
-    Collection<Company> findByCriteria(String criteria);
+            "(lower(C.title) like lower(concat('%', :criteria, '%'))) OR " +
+            "(lower(C.inn) like lower(concat('%', :criteria, '%'))) ORDER BY C.title")
+    Page<Company> findByCriteria(String criteria, Pageable page);
+
+    /**
+     * Retrieves a paginated list of all companies sorted by title in ascending order.
+     * <p>
+     * This method fetches companies from the database and sorts them case-sensitively
+     * by the {@code title} field in ascending (A-Z) order. The pagination is applied
+     * at the database level to ensure efficient retrieval and prevent loading
+     * large datasets into memory.
+     * </p>
+     * <p>
+     * The result is returned as a {@link Page} object, which includes not only
+     * the list of companies for the requested page but also metadata such as
+     * total number of elements, total pages, current page number, and page size.
+     * </p>
+     *
+     * @param page the pagination information including page number (zero-based)
+     *             and page size; must not be {@code null}
+     * @return a {@link Page} of {@link Company} entities containing the companies
+     * for the requested page, sorted by title in ascending order
+     * @see Page
+     * @see Pageable
+     * @see Company
+     */
+    Page<Company> findAllByOrderByTitleAsc(Pageable page);
 }

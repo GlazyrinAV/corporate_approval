@@ -63,39 +63,29 @@ public class Verifier {
     private final MeetingRepository meetingRepository;
 
     /**
-     * Verifies that a company exists and, if a meeting ID is provided, that the meeting belongs to that company.
+     * Verifies that a company with the given ID exists and, if specified, that the meeting with the given ID exists and belongs to the company.
      * <p>
-     * This method performs two levels of validation:
-     * <ol>
-     *   <li>Company existence check: verifies that a company with the provided ID exists</li>
-     *   <li>Ownership validation: if a meeting ID is provided, verifies that the meeting exists
-     *       and is associated with the specified company</li>
-     * </ol>
+     * This method first checks whether the provided company ID is not null and corresponds to an existing company
+     * by calling {@link #verifyCompany(Integer)}. If the company is invalid, an exception is thrown.
      * </p>
      * <p>
-     * The method is designed to be used at the beginning of service operations that require
-     * both company and meeting context, ensuring proper access control and data isolation
-     * in a multi-tenant environment. It throws appropriate exceptions to provide clear
-     * feedback about validation failures.
+     * If a meeting ID is provided (not null), the method then checks whether:
+     * <ul>
+     *   <li>The meeting exists in the database.</li>
+     *   <li>The meeting is associated with the specified company.</li>
+     * </ul>
+     * If either check fails, an appropriate exception is thrown.
      * </p>
      *
-     * @param companyId the ID of the company to verify; must not be null
-     * @param meetingId the ID of the meeting to check ownership for; may be null to check only company existence
-     * @throws CompanyNotFound             if no company exists with the given companyId
-     * @throws MeetingNotFound             if a meetingId is provided but no meeting exists with that ID
-     * @throws MeetingDoNotBelongToCompany if a meetingId is provided and the meeting exists but belongs to a different company
-     * @throws IllegalArgumentException    if companyId is null
-     * @see CompanyRepository#existsById(Object)
-     * @see MeetingRepository#findById(Object)
+     * @param companyId the unique identifier of the company to verify; must not be {@code null}
+     * @param meetingId the unique identifier of the meeting to verify; may be {@code null} to skip meeting checks
+     * @throws IllegalArgumentException    if the provided {@code companyId} is {@code null}
+     * @throws CompanyNotFound             if no company exists with the given {@code companyId}
+     * @throws MeetingNotFound             if a {@code meetingId} is provided but no meeting exists with that ID
+     * @throws MeetingDoNotBelongToCompany if a {@code meetingId} is provided and the meeting exists but does not belong to the specified company
      */
     public void verifyCompanyAndMeeting(Integer companyId, Integer meetingId) {
-        if (Objects.isNull(companyId)) {
-            throw new IllegalArgumentException("Company ID must not be null");
-        }
-
-        if (!companyRepository.existsById(companyId)) {
-            throw new CompanyNotFound(companyId);
-        }
+        verifyCompany(companyId);
 
         if (Objects.nonNull(meetingId)) {
             Meeting meeting = meetingRepository.findById(meetingId)
@@ -105,6 +95,28 @@ public class Verifier {
             if (!Objects.equals(meetingCompanyId, companyId)) {
                 throw new MeetingDoNotBelongToCompany(companyId, meetingId);
             }
+        }
+    }
+
+    /**
+     * Verifies that a company with the given ID exists in the system.
+     * <p>
+     * This method checks whether the specified company ID is not null and corresponds
+     * to an existing company in the database. If the ID is null or no company is found
+     * with the given ID, an appropriate exception is thrown.
+     * </p>
+     *
+     * @param companyId the unique identifier of the company to verify; must not be {@code null}
+     * @throws IllegalArgumentException if the provided {@code companyId} is {@code null}
+     * @throws CompanyNotFound          if no company exists with the given ID
+     */
+    public void verifyCompany(Integer companyId) {
+        if (Objects.isNull(companyId)) {
+            throw new IllegalArgumentException("Company ID must not be null");
+        }
+
+        if (!companyRepository.existsById(companyId)) {
+            throw new CompanyNotFound(companyId);
         }
     }
 }
