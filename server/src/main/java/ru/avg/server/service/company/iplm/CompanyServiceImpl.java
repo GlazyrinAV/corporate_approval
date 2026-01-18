@@ -13,6 +13,8 @@ import ru.avg.server.repository.company.CompanyRepository;
 import ru.avg.server.service.company.CompanyService;
 import ru.avg.server.utils.updater.Updater;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -151,13 +153,46 @@ public class CompanyServiceImpl implements CompanyService {
      * <p>Fetches all company records, maps each entity to a DTO, and returns them as a list.
      * Returns an empty list if no companies exist — never returns null.</p>
      *
-     * @return a list of CompanyDto objects; never null (may be empty)
+     * @return a list of CompanyDto objects; never null (maybe empty)
      * @see CompanyRepository#findAll()
      * @see CompanyMapper#toDto(Company)
      */
     @Override
     public List<CompanyDto> findAll() {
         return storage.findAll().stream()
+                .map(companyMapper::toDto)
+                .toList();
+    }
+
+    /**
+     * Retrieves a collection of companies that match the specified search criteria.
+     * <p>
+     * This method performs a search operation to find companies whose title or INN
+     * (Individual Taxpayer Number) contains the given criteria string. The search is
+     * case-insensitive and supports partial matching. If the criteria is null or blank,
+     * an empty list is returned to prevent unintended full dataset retrieval.
+     * </p>
+     * <p>
+     * The search is delegated to the {@link CompanyRepository#findByCriteria(String)} method,
+     * which executes a JPQL query against the database filtering by title and INN fields.
+     * The resulting entities are then converted to data transfer objects ({@link CompanyDto})
+     * using the {@link CompanyMapper#toDto(Company)} method.
+     * </p>
+     *
+     * @param criteria the search string to match against company titles and INNs;
+     *                 if null or blank, an empty collection is returned
+     * @return a collection of {@link CompanyDto} objects representing companies that match
+     * the search criteria; never {@code null}, but may be empty if no matches are found
+     * @see ru.avg.server.repository.company.CompanyRepository#findByCriteria(String)
+     * @see CompanyDto
+     * @see CompanyMapper#toDto(Company)
+     */
+    @Override
+    public Collection<CompanyDto> findByCriteria(String criteria) {
+        if (criteria == null || criteria.isBlank()) {
+            return new ArrayList<>();
+        }
+        return storage.findByCriteria(criteria).stream()
                 .map(companyMapper::toDto)
                 .toList();
     }

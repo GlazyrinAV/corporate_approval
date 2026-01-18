@@ -3,7 +3,7 @@ package ru.avg.server.service.company;
 import ru.avg.server.model.dto.company.CompanyDto;
 import ru.avg.server.model.dto.company.NewCompanyDto;
 
-import java.util.List;
+import java.util.Collection;
 
 /**
  * Service interface defining operations for managing company entities within the application.
@@ -35,8 +35,8 @@ public interface CompanyService {
      *                      defined in {@link ru.avg.server.model.dto.company.NewCompanyDto}
      * @return the saved {@link CompanyDto} instance with generated fields populated,
      * such as {@code id}, and all validated and normalized data
-     * @throws IllegalArgumentException                             if {@code newCompanyDto} is {@code null}
-     * @throws ru.avg.server.exception.company.CompanyTypeNotFound  if the specified company type is not supported
+     * @throws IllegalArgumentException                            if {@code newCompanyDto} is {@code null}
+     * @throws ru.avg.server.exception.company.CompanyTypeNotFound if the specified company type is not supported
      * @see ru.avg.server.model.dto.company.NewCompanyDto
      * @see ru.avg.server.model.company.Company
      */
@@ -92,16 +92,47 @@ public interface CompanyService {
     CompanyDto findById(Integer companyId);
 
     /**
-     * Retrieves a list of all companies available in the system.
+     * Retrieves a collection of all existing companies from the system.
      * <p>
-     * This method returns a comprehensive list of all persisted company records,
-     * converted into their DTO representations. The result is never {@code null},
-     * but may be an empty list if no companies have been created.
+     * This method returns a complete list of companies represented as {@link CompanyDto} objects.
+     * The operation is read-only and does not modify any data. It is typically used to obtain
+     * an overview of all available companies for administrative purposes, selection interfaces,
+     * or system initialization.
+     * </p>
+     * <p>
+     * The returned collection contains data transfer objects that encapsulate company information
+     * such as name, registration details, and other relevant attributes, without exposing
+     * internal entity structures.
      * </p>
      *
-     * @return a {@link List} of {@link CompanyDto} instances; never {@code null}
-     * — returns an empty list if no companies are found
-     * @see #findById(Integer)
+     * @return a collection of {@link CompanyDto} objects representing all companies in the system;
+     * never {@code null}, but may be empty if no companies exist
+     * @see CompanyDto
+     * @see ru.avg.server.controller.web.company.CompanyController#findAll()
      */
-    List<CompanyDto> findAll();
+    Collection<CompanyDto> findAll();
+
+    /**
+     * Retrieves a collection of companies that match the specified search criteria.
+     * <p>
+     * This method performs a search operation across company data using the provided criteria.
+     * The search is typically applied to key identifying fields such as company name (title)
+     * and Individual Taxpayer Number (INN). The matching is performed in a case-insensitive
+     * manner and supports partial matches (e.g., substring matching).
+     * </p>
+     * <p>
+     * If the criteria is null or blank, the method returns an empty collection to prevent
+     * unintentional retrieval of all company records. The returned collection contains
+     * data transfer objects ({@link CompanyDto}) that encapsulate essential company information
+     * without exposing internal entity structure or persistence details.
+     * </p>
+     *
+     * @param criteria the search string to match against company data; if null or blank,
+     *                 an empty collection is returned
+     * @return a collection of {@link CompanyDto} objects representing companies that match
+     * the search criteria; never {@code null}, but may be empty if no matches are found
+     * @see CompanyDto
+     * @see ru.avg.server.controller.web.company.CompanyController#findByCriteria(String)
+     */
+    Collection<CompanyDto> findByCriteria(String criteria);
 }

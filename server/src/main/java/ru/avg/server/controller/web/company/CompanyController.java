@@ -13,7 +13,7 @@ import ru.avg.server.model.dto.company.CompanyDto;
 import ru.avg.server.model.dto.company.NewCompanyDto;
 import ru.avg.server.service.company.CompanyService;
 
-import java.util.List;
+import java.util.Collection;
 
 /**
  * REST controller for managing company resources.
@@ -88,20 +88,60 @@ public class CompanyController {
     }
 
     /**
-     * Retrieves a list of all existing companies.
+     * Retrieves a collection of all existing companies.
+     * <p>
+     * This endpoint returns a list of all companies stored in the system. It is used to
+     * obtain an overview of all available companies for administrative or selection purposes.
+     * The operation is read-only and does not modify any data.
+     * </p>
      *
-     * @return {@link ResponseEntity} containing a list of {@link CompanyDto} objects with HTTP status {@code 200 OK}
-     * Returns an empty list if no companies exist
+     * @return a ResponseEntity containing a collection of {@link CompanyDto} objects
+     * representing all companies, with HTTP status 200 (OK)
      * @see CompanyService#findAll()
+     * @see CompanyDto
      */
-    @Operation(summary = "Get all companies", description = "Retrieves a list of all existing companies")
+    @Operation(summary = "Get all companies", description = "Retrieves a collection of all existing companies")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved list of companies")
     })
     @GetMapping
-    public ResponseEntity<List<CompanyDto>> findAll() {
+    public ResponseEntity<Collection<CompanyDto>> findAll() {
         log.debug("Finding all companies");
-        List<CompanyDto> companies = companyService.findAll();
+        Collection<CompanyDto> companies = companyService.findAll();
+        return ResponseEntity.ok(companies);
+    }
+
+    /**
+     * Searches for companies based on the provided search criteria.
+     * <p>
+     * This endpoint performs a case-insensitive partial match search across company data,
+     * specifically targeting the company title (name) and INN (Individual Taxpayer Number).
+     * If the criteria parameter is not provided or is empty, all companies may be returned
+     * depending on service implementation.
+     * </p>
+     * <p>
+     * The search is typically used in UI components such as autocomplete fields or search tables,
+     * allowing users to locate companies by name or tax identifier. The operation is read-only
+     * and does not modify any data.
+     * </p>
+     *
+     * @param criteria the search string to match against company titles and INNs;
+     *                 optional, defaults to empty string when not provided
+     * @return a ResponseEntity containing a collection of {@link CompanyDto} objects
+     * representing companies that match the search criteria, with HTTP status 200 (OK)
+     * @see CompanyService#findByCriteria(String)
+     * @see CompanyDto
+     */
+    @Operation(summary = "Search companies by criteria",
+            description = "Finds companies by partial match on title or INN (case-insensitive)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved list of matching companies")
+    })
+    @GetMapping
+    public ResponseEntity<Collection<CompanyDto>> findByCriteria(
+            @RequestParam(required = false, defaultValue = "") String criteria) {
+        log.debug("Finding company by criteria: {}", criteria);
+        Collection<CompanyDto> companies = companyService.findByCriteria(criteria);
         return ResponseEntity.ok(companies);
     }
 

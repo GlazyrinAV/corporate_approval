@@ -32,7 +32,7 @@
     </developers>
 
     <properties>
-        <java.version>25</java.version>
+        <java.version>21</java.version>
         <!-- Explicit versions for key dependencies -->
         <postgresql.version>42.7.3</postgresql.version>
         <lombok.version>1.18.42</lombok.version>
