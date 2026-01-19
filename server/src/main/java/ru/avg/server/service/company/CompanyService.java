@@ -71,7 +71,7 @@ public interface CompanyService {
      *
      * @param companyId the unique identifier of the company to delete; must be a positive integer
      * @throws ru.avg.server.exception.company.CompanyNotFound if no company exists with the given {@code companyId}
-     * @see ru.avg.server.repository.company.CompanyRepository#deleteCompanyById(Integer)
+     * @see ru.avg.server.repository.company.CompanyRepository#deleteById(Integer)
      */
     void delete(Integer companyId);
 

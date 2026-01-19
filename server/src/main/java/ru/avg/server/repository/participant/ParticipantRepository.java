@@ -41,22 +41,46 @@ public interface ParticipantRepository extends JpaRepository<Participant, Intege
     /**
      * Retrieves a paginated list of all participants associated with a specific company,
      * sorted by participant name in ascending order.
+     * <p>
+     * This method returns a {@link Page} of {@link Participant} entities that belong to the specified company,
+     * ordered alphabetically by the participant's name. The query is executed with the provided
+     * {@link Pageable} parameter, which defines the page number, page size, and optional sorting.
+     * The result includes full pagination metadata such as total number of elements, total pages,
+     * and navigation flags (first page, last page, etc.).
+     * <p>
+     * If no participants are found for the given company ID, an empty {@link Page} is returned.
+     * The method assumes that the {@code companyId} refers to an existing company; no access control
+     * or existence validation is performed at this level.
+     * <p>
+     * This method uses Spring Data JPA's query derivation mechanism and does not require a custom implementation.
      *
-     * @param companyId the ID of the company; must not be null
-     * @param pageable  the pagination information including page number and page size; must not be null
+     * @param companyId the ID of the company; must not be {@code null}
+     * @param pageable  the pagination information including page number and page size; must not be {@code null}
      * @return a {@link Page} of {@link Participant} entities containing the participants for the requested page,
-     * including full pagination metadata (total elements, total pages, etc.), never null
+     *         including full pagination metadata (total elements, total pages, etc.), never {@code null}
+     *
+     * @see Page
+     * @see Pageable
+     * @see Participant
+     * @since 1.0
      */
-    @Query("SELECT Participant AS P FROM Participant WHERE P.company.id = :companyId ORDER BY P.name")
-    Page<Participant> findAllByCompanyId(Integer companyId, Pageable pageable);
+    Page<Participant> findAllByCompanyIdOrderByName(Integer companyId, Pageable pageable);
 
     /**
      * Retrieves all participants associated with a specific company, sorted by participant name in ascending order.
+     * <p>
+     * This method returns a list of {@link Participant} entities that belong to the specified company,
+     * ordered alphabetically by the participant's name. The result list is eagerly fetched and never {@code null}.
+     * If no participants are found for the given company ID, an empty list is returned.
      *
-     * @param companyId the ID of the company; must not be null
-     * @return a list of participants, never null
+     * @param companyId the unique identifier of the company; must not be {@code null}
+     * @return a {@link List} of {@link Participant} objects, sorted by name in ascending order;
+     *         never {@code null}
+     *
+     * @see Participant
+     * @since 1.0
      */
-    List<Participant> findAllByCompanyId(Integer companyId);
+    List<Participant> findAllByCompanyIdOrderByName(Integer companyId);
 
     /**
      * Counts the number of active participants in a given company.
@@ -96,5 +120,7 @@ public interface ParticipantRepository extends JpaRepository<Participant, Intege
      */
     @Query("SELECT Participant AS P FROM Participant WHERE (P.company.id = :companyId) AND " +
             "(lower(P.name) like lower(concat('%', :criteria, '%'))) ORDER BY P.name")
-    Page<Participant> findByCriteria(Integer companyId, String criteria, Pageable page);
+    Page<Participant> findByCriteria(@Param("companyId") Integer companyId,
+                                     @Param("criteria") String criteria,
+                                     Pageable page);
 }

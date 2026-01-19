@@ -1,11 +1,11 @@
 package ru.avg.server.service.meeting;
 
+import org.springframework.data.domain.Page;
 import ru.avg.server.model.dto.meeting.MeetingDto;
 import ru.avg.server.model.dto.meeting.NewMeetingDto;
 import ru.avg.server.model.meeting.MeetingType;
 
 import java.time.LocalDate;
-import java.util.List;
 
 /**
  * Service interface defining the contract for managing meeting entities within the approval system.
@@ -108,16 +108,30 @@ public interface MeetingService {
     MeetingDto findById(Integer companyId, Integer meetingId);
 
     /**
-     * Retrieves all meetings associated with a specific company.
-     * This method returns a complete list of meetings for the given company identifier.
+     * Retrieves a paginated list of meeting DTOs associated with a specific company,
+     * sorted by meeting date in descending order (newest first).
      * <p>
-     * The result is never null but may be an empty list if no meetings exist for the company.
-     * Meetings are typically returned in chronological order by date, though the exact
-     * ordering may depend on the implementation.
-     * </p>
+     * This method returns a page of {@link MeetingDto} objects that belong to the specified company.
+     * Pagination is controlled by the {@code page} (zero-based index) and {@code limit} (page size)
+     * parameters. The result set is sorted by the meeting date in descending order to show the most
+     * recent meetings first.
+     * <p>
+     * The method performs access control by verifying that the requesting user or context has
+     * permission to access the specified company's data. If the company does not exist or access
+     * is denied, an exception is thrown.
      *
-     * @param companyId the ID of the company for which to retrieve all meetings
-     * @return a list of MeetingDto objects representing all meetings for the company; never null
+     * @param companyId the unique identifier of the company whose meetings are to be retrieved;
+     *                  must not be {@code null} and must refer to an existing and accessible company
+     * @param page      the zero-based page number to retrieve; must be non-negative,
+     *                  otherwise an {@link IllegalArgumentException} is thrown
+     * @param limit     the maximum number of meetings to include per page; must be between 1 and 20 (inclusive),
+     *                  otherwise an {@link IllegalArgumentException} is thrown
+     * @return a {@link Page} containing the requested slice of {@link MeetingDto} objects,
+     * never {@code null}
+     * @throws IllegalArgumentException if {@code page} is negative or {@code limit} is not in the range [1, 20]
+     * @throws RuntimeException         if the company verification fails (e.g., company not found or access denied)
+     * @see Page
+     * @see MeetingDto
      */
-    List<MeetingDto> findAll(Integer companyId);
+    Page<MeetingDto> findAll(Integer companyId, Integer page, Integer limit);
 }

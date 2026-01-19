@@ -160,7 +160,7 @@ public class ParticipantServiceImpl implements ParticipantService {
 
         // Handle type change with conflict detection
         if (!Objects.equals(updateSource.getType(), existingParticipant.getType())) {
-            boolean conflictExists = participantRepository.findAllByCompanyId(companyId).stream()
+            boolean conflictExists = participantRepository.findAllByCompanyIdOrderByName(companyId).stream()
                     .anyMatch(p -> !Objects.equals(p.getId(), participantId) && // Exclude current participant
                             p.getName().equals(existingParticipant.getName()) &&
                             p.getShare().equals(existingParticipant.getShare()) &&
@@ -244,7 +244,7 @@ public class ParticipantServiceImpl implements ParticipantService {
     public List<ParticipantDto> findAllByMeetingType(Integer companyId, MeetingType type) {
         verifier.verifyCompany(companyId);
 
-        return participantRepository.findAllByCompanyId(companyId).stream()
+        return participantRepository.findAllByCompanyIdOrderByName(companyId).stream()
                 .filter(participant -> {
                     if (type == MeetingType.BOD) {
                         return participant.getType() == ParticipantType.MEMBER_OF_BOARD;
@@ -273,7 +273,7 @@ public class ParticipantServiceImpl implements ParticipantService {
      * including full pagination metadata (total elements, total pages, etc.)
      * @throws IllegalArgumentException                        if page is negative or limit is not in valid range (1-20)
      * @throws ru.avg.server.exception.company.CompanyNotFound if the specified {@code companyId} does not exist
-     * @see ParticipantRepository#findAllByCompanyId(Integer, Pageable)
+     * @see ParticipantRepository#findAllByCompanyIdOrderByName(Integer, Pageable)
      * @see ParticipantMapper#toDto(Participant)
      * @see PageRequest#of(int, int)
      */
@@ -281,11 +281,11 @@ public class ParticipantServiceImpl implements ParticipantService {
     public Page<ParticipantDto> findAll(Integer companyId, Integer page, Integer limit) {
         verifier.verifyCompany(companyId);
 
-        checkPagination(page, limit);
+        verifier.verifyPageAndLimit(page, limit, 20);
 
         Pageable pageable = PageRequest.of(page, limit);
 
-        return participantRepository.findAllByCompanyId(companyId, pageable)
+        return participantRepository.findAllByCompanyIdOrderByName(companyId, pageable)
                 .map(participantMapper::toDto);
     }
 
@@ -345,7 +345,7 @@ public class ParticipantServiceImpl implements ParticipantService {
     public Page<ParticipantDto> findByCriteria(Integer companyId, String criteria, Integer page, Integer limit) {
         verifier.verifyCompany(companyId);
 
-        checkPagination(page, limit);
+        verifier.verifyPageAndLimit(page, limit, 20);
 
         // Return empty page for null or blank criteria to prevent unintended full dataset retrieval
         if (criteria == null || criteria.isBlank()) {
@@ -355,26 +355,5 @@ public class ParticipantServiceImpl implements ParticipantService {
         Pageable pageable = PageRequest.of(page, limit);
 
         return participantRepository.findByCriteria(companyId, criteria, pageable).map(participantMapper::toDto);
-    }
-
-    /**
-     * Validates pagination parameters to ensure they are within acceptable ranges.
-     * <p>
-     * This helper method checks that the page number is non-negative and the limit (page size)
-     * is between 1 and 20 (inclusive). If validation fails, an IllegalArgumentException is thrown.
-     * </p>
-     *
-     * @param page  the zero-based page number to validate; must be non-negative
-     * @param limit the number of elements per page to validate; must be between 1 and 20 (inclusive)
-     * @throws IllegalArgumentException if page is negative or limit is not in valid range (1-20)
-     */
-    private void checkPagination(Integer page, Integer limit) {
-        // Validate input parameters
-        if (page == null || page < 0) {
-            throw new IllegalArgumentException("Page must be non-negative");
-        }
-        if (limit == null || limit < 1 || limit > 20) {
-            throw new IllegalArgumentException("Limit must be between 1 and 20");
-        }
     }
 }

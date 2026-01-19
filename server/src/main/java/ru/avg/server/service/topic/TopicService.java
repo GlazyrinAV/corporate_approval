@@ -1,9 +1,8 @@
 package ru.avg.server.service.topic;
 
+import org.springframework.data.domain.Page;
 import ru.avg.server.model.dto.topic.NewTopicDto;
 import ru.avg.server.model.dto.topic.TopicDto;
-
-import java.util.List;
 
 /**
  * Service interface defining the contract for managing topics within the approval system.
@@ -29,7 +28,7 @@ public interface TopicService {
      * @param meetingId the ID of the meeting for which the topic is being created
      * @param topicDto  the DTO containing the topic data to be saved, must not be null
      * @return the saved TopicDto with the generated ID and other system-assigned fields
-     * @throws IllegalArgumentException if topicDto is null
+     * @throws IllegalArgumentException                        if topicDto is null
      * @throws ru.avg.server.exception.meeting.MeetingNotFound if the specified meeting does not exist
      * @throws ru.avg.server.exception.company.CompanyNotFound if the specified company does not exist
      */
@@ -45,8 +44,8 @@ public interface TopicService {
      * @param topicId   the ID of the topic to update
      * @param topicDto  the DTO containing the fields to update, must not be null
      * @return the updated TopicDto reflecting the changes in the database
-     * @throws IllegalArgumentException if topicDto is null
-     * @throws ru.avg.server.exception.topic.TopicNotFound if the specified topic does not exist
+     * @throws IllegalArgumentException                        if topicDto is null
+     * @throws ru.avg.server.exception.topic.TopicNotFound     if the specified topic does not exist
      * @throws ru.avg.server.exception.meeting.MeetingNotFound if the specified meeting does not exist
      * @throws ru.avg.server.exception.company.CompanyNotFound if the specified company does not exist
      */
@@ -60,7 +59,7 @@ public interface TopicService {
      * @param companyId the ID of the company to which the meeting belongs (used for access control)
      * @param meetingId the ID of the meeting from which the topic will be removed
      * @param topicId   the ID of the topic to delete
-     * @throws ru.avg.server.exception.topic.TopicNotFound if the specified topic does not exist
+     * @throws ru.avg.server.exception.topic.TopicNotFound     if the specified topic does not exist
      * @throws ru.avg.server.exception.meeting.MeetingNotFound if the specified meeting does not exist
      * @throws ru.avg.server.exception.company.CompanyNotFound if the specified company does not exist
      */
@@ -73,11 +72,11 @@ public interface TopicService {
      * @param companyId the ID of the company to which the meeting belongs (used for access control)
      * @param meetingId the ID of the meeting for which to retrieve topics
      * @return a list of TopicDto objects representing all topics for the meeting,
-     *         ordered by their position in the agenda; returns empty list if no topics exist
+     * ordered by their position in the agenda; returns empty list if no topics exist
      * @throws ru.avg.server.exception.meeting.MeetingNotFound if the specified meeting does not exist
      * @throws ru.avg.server.exception.company.CompanyNotFound if the specified company does not exist
      */
-    List<TopicDto> findAllByMeetingId(Integer companyId, Integer meetingId);
+    Page<TopicDto> findAllByMeetingId(Integer companyId, Integer meetingId, Integer page, Integer limit);
 
     /**
      * Retrieves a specific topic by its ID within the context of a meeting and company.
@@ -87,9 +86,27 @@ public interface TopicService {
      * @param meetingId the ID of the meeting to which the topic belongs
      * @param topicId   the ID of the topic to retrieve
      * @return the TopicDto representing the requested topic
-     * @throws ru.avg.server.exception.topic.TopicNotFound if the specified topic does not exist
+     * @throws ru.avg.server.exception.topic.TopicNotFound     if the specified topic does not exist
      * @throws ru.avg.server.exception.meeting.MeetingNotFound if the specified meeting does not exist
      * @throws ru.avg.server.exception.company.CompanyNotFound if the specified company does not exist
      */
     TopicDto findById(Integer companyId, Integer meetingId, Integer topicId);
+
+    /**
+     * Searches for topics by a search criteria within a specific meeting.
+     * Performs a case-insensitive partial match search on topic titles.
+     * Returns paginated results to support efficient handling of large datasets.
+     *
+     * @param companyId the ID of the company to which the meeting belongs (used for access control)
+     * @param meetingId the ID of the meeting in which to search for topics
+     * @param criteria  the search string to match against topic titles; if blank or null, returns empty page
+     * @param page      the zero-based page number to retrieve; must be non-negative
+     * @param limit     the maximum number of elements to return per page; must be between 1 and 20 (inclusive)
+     * @return a Page of TopicDto objects matching the search criteria, including full pagination metadata;
+     * never null, returns empty page if no results found or criteria is blank
+     * @throws IllegalArgumentException                        if page is negative or limit is not in range [1,20]
+     * @throws ru.avg.server.exception.meeting.MeetingNotFound if the specified meeting does not exist
+     * @throws ru.avg.server.exception.company.CompanyNotFound if the specified company does not exist
+     */
+    Page<TopicDto> findByCriteria(Integer companyId, Integer meetingId, String criteria, Integer page, Integer limit);
 }

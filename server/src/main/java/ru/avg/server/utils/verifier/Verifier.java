@@ -119,4 +119,17 @@ public class Verifier {
             throw new CompanyNotFound(companyId);
         }
     }
+
+    public void verifyPageAndLimit(Integer page, Integer limit, Integer maxLimit) {
+        // Validate input parameters
+        if (maxLimit == null || maxLimit <= 0) {
+            throw new IllegalArgumentException("Maximum limit must be positive");
+        }
+        if (page == null || page < 0) {
+            throw new IllegalArgumentException("Page must be non-negative");
+        }
+        if (limit == null || limit < 1 || limit > maxLimit) {
+            throw new IllegalArgumentException("Limit must be between 1 and 50");
+        }
+    }
 }

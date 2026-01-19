@@ -15,10 +15,10 @@ import ru.avg.server.model.dto.topic.mapper.TopicMapper;
 import ru.avg.server.model.meeting.MeetingType;
 import ru.avg.server.model.participant.MeetingParticipant;
 import ru.avg.server.repository.participant.MeetingParticipantRepository;
+import ru.avg.server.repository.topic.TopicRepository;
 import ru.avg.server.service.meeting.MeetingService;
 import ru.avg.server.service.participant.MeetingParticipantService;
 import ru.avg.server.service.participant.ParticipantService;
-import ru.avg.server.service.topic.TopicService;
 import ru.avg.server.service.voting.VotingService;
 import ru.avg.server.utils.verifier.Verifier;
 
@@ -57,7 +57,7 @@ public class MeetingParticipantServiceInMemoryImpl implements MeetingParticipant
     /**
      * Service for managing topics within a meeting, used to retrieve topics when creating votings.
      */
-    private final TopicService topicService;
+    private final TopicRepository topicRepository;
 
     /**
      * Mapper for converting {@link TopicDto} to entity when creating votings.
@@ -102,11 +102,11 @@ public class MeetingParticipantServiceInMemoryImpl implements MeetingParticipant
 
         for (MeetingParticipantDto participant : participants) {
             MeetingParticipant meetingParticipant = meetingParticipantRepository.save(meetingParticipantMapper.fromDto(participant));
-            List<TopicDto> topics = topicService.findAllByMeetingId(companyId, meetingParticipant.getMeeting().getId());
-            if (topics != null) {
-                for (TopicDto topic : topics) {
-                    votingService.save(topicMapper.fromDto(topic));
-                }
+            List<TopicDto> topics = topicRepository.findAllByMeetingId(meetingParticipant.getMeeting().getId()).stream()
+                    .map(topicMapper::toDto)
+                    .toList();
+            for (TopicDto topic : topics) {
+                votingService.save(topicMapper.fromDto(topic));
             }
         }
         return participants;

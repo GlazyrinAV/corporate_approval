@@ -1,6 +1,9 @@
 package ru.avg.server.service.meeting.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.avg.server.exception.company.CompanyNotFound;
 import ru.avg.server.exception.meeting.MeetingNotFound;
@@ -17,7 +20,6 @@ import ru.avg.server.utils.updater.Updater;
 import ru.avg.server.utils.verifier.Verifier;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -252,25 +254,38 @@ public class MeetingServiceImpl implements MeetingService {
     }
 
     /**
-     * Retrieves all meetings associated with the specified company.
-     * This method returns a complete list of meetings for the given company identifier,
-     * converting each entity to a DTO for external representation. The result is never null
-     * but may be an empty list if no meetings exist for the company.
+     * Retrieves a paginated list of meeting DTOs for a given company, sorted by meeting date in descending order.
      * <p>
-     * The method enforces access control by verifying company existence before querying,
-     * ensuring that clients cannot access meetings across company boundaries.
-     * </p>
+     * This method first verifies that the specified company exists and is accessible by the current user or context.
+     * It then validates the provided pagination parameters: {@code page} must be non-negative and {@code limit}
+     * must be between 1 and 20 (inclusive). A {@link Pageable} object is created using these validated values
+     * and passed to the repository to fetch the corresponding page of {@link Meeting} entities. The retrieved
+     * entities are then converted to {@link MeetingDto} objects using the {@link MeetingMapper}.
      *
-     * @param companyId the unique identifier of the company whose meetings are to be retrieved
-     * @return a list of MeetingDto objects representing all meetings for the company; never null
-     * @throws CompanyNotFound if the specified company does not exist
-     * @see MeetingRepository#findAllByCompanyId(Integer)
+     * @param companyId the unique identifier of the company whose meetings are to be retrieved;
+     *                  must correspond to an existing and accessible company, otherwise a {@link RuntimeException} may be thrown
+     * @param page      the page number to retrieve (zero-based index); must not be {@code null} and must be greater than
+     *                  or equal to zero, otherwise an {@link IllegalArgumentException} is thrown
+     * @param limit     the maximum number of meetings to return per page; must not be {@code null} and must be
+     *                  between 1 and 20 (inclusive), otherwise an {@link IllegalArgumentException} is thrown
+     * @return a {@link Page} containing the requested slice of {@link MeetingDto} objects,
+     * sorted by meeting date in descending order (newest first); never {@code null}
+     * @throws IllegalArgumentException if {@code page} is negative or {@code limit} is not in the range [1, 20]
+     * @throws RuntimeException         if the company verification fails (e.g., company does not exist or access is denied)
+     * @see MeetingRepository#findByCompanyIdOrderByDateDesc(Integer, Pageable)
+     * @see MeetingMapper#toDto(Meeting)
+     * @see Page
+     * @see PageRequest
      */
     @Override
-    public List<MeetingDto> findAll(Integer companyId) {
-        verifier.verifyCompanyAndMeeting(companyId, null);
-        return meetingRepository.findAllByCompanyId(companyId).stream()
-                .map(meetingMapper::toDto)
-                .toList();
+    public Page<MeetingDto> findAll(Integer companyId, Integer page, Integer limit) {
+        verifier.verifyCompany(companyId);
+
+        verifier.verifyPageAndLimit(page, limit, 20);
+
+        Pageable pageable = PageRequest.of(page, limit);
+
+        return meetingRepository.findByCompanyIdOrderByDateDesc(companyId, pageable)
+                .map(meetingMapper::toDto);
     }
 }

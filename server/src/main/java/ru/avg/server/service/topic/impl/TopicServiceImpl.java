@@ -1,6 +1,9 @@
 package ru.avg.server.service.topic.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.avg.server.exception.topic.TopicNotFound;
@@ -14,8 +17,6 @@ import ru.avg.server.service.topic.TopicService;
 import ru.avg.server.service.voting.VotingService;
 import ru.avg.server.utils.updater.Updater;
 import ru.avg.server.utils.verifier.Verifier;
-
-import java.util.List;
 
 /**
  * Implementation of {@link TopicService} providing business logic for managing meeting topics.
@@ -114,31 +115,40 @@ public class TopicServiceImpl implements TopicService {
     }
 
     /**
-     * Retrieves all topics associated with a specific meeting.
-     * This is a read-only operation that returns topics in their natural order.
+     * Retrieves a paginated list of all topics associated with a specific meeting,
+     * sorted by topic title in ascending order.
      *
      * @param companyId the ID of the company (for access control)
      * @param meetingId the ID of the meeting for which to retrieve topics
-     * @return list of TopicDto objects for the meeting, empty if none exist
+     * @param page      the zero-based page number to retrieve; must be non-negative
+     * @param limit     the maximum number of elements to return per page; must be between 1 and 20 (inclusive)
+     * @return a {@link Page} of {@link TopicDto} objects for the requested page,
+     *         including full pagination metadata (total elements, total pages, etc.);
+     *         never {@code null}
+     * @throws IllegalArgumentException if {@code page} is negative or {@code limit} is not in the range [1,20]
+     * @see TopicRepository#findAllByMeetingIdOrderByTitle(Integer, Pageable)
      */
     @Override
-    public List<TopicDto> findAllByMeetingId(Integer companyId, Integer meetingId) {
+    public Page<TopicDto> findAllByMeetingId(Integer companyId, Integer meetingId, Integer page, Integer limit) {
         verifier.verifyCompanyAndMeeting(companyId, meetingId);
 
-        return topicRepository.findAllByMeeting_Id(meetingId).stream()
-                .map(topicMapper::toDto)
-                .toList();
+        verifier.verifyPageAndLimit(page, limit, 20);
+
+        Pageable pageable = PageRequest.of(page, limit);
+
+        return topicRepository.findAllByMeetingIdOrderByTitle(meetingId, pageable)
+                .map(topicMapper::toDto);
     }
 
     /**
-     * Retrieves a specific topic by its ID.
-     * This is a read-only operation that performs access control verification.
+     * Retrieves a specific topic by its ID within the context of a company and meeting.
+     * Performs access control verification before retrieving the topic.
      *
      * @param companyId the ID of the company (for access control)
      * @param meetingId the ID of the meeting (for access control)
      * @param topicId   the ID of the topic to retrieve
-     * @return the TopicDto for the requested topic
-     * @throws TopicNotFound if topic with given ID doesn't exist
+     * @return the {@link TopicDto} for the requested topic
+     * @throws TopicNotFound if topic with given ID doesn't exist or is not accessible
      */
     @Override
     public TopicDto findById(Integer companyId, Integer meetingId, Integer topicId) {
@@ -146,5 +156,39 @@ public class TopicServiceImpl implements TopicService {
 
         return topicMapper.toDto(topicRepository.findById(topicId)
                 .orElseThrow(() -> new TopicNotFound(topicId)));
+    }
+
+    /**
+     * Searches for topics within a specific meeting based on a text criteria.
+     * The search performs a case-insensitive partial match on topic titles.
+     * Returns results in a paginated format sorted by title in ascending order.
+     *
+     * @param companyId the ID of the company (for access control)
+     * @param meetingId the ID of the meeting to search within
+     * @param criteria  the search string to match against topic titles;
+     *                  if null or blank, returns an empty page to prevent full dataset retrieval
+     * @param page      the zero-based page number to retrieve; must be non-negative
+     * @param limit     the maximum number of elements to return per page; must be between 1 and 20 (inclusive)
+     * @return a {@link Page} of {@link TopicDto} objects matching the search criteria
+     *         for the requested page, including full pagination metadata;
+     *         never {@code null}
+     * @throws IllegalArgumentException if {@code page} is negative or {@code limit} is not in the range [1,20]
+     * @see TopicRepository#findByCriteria(Integer, String, Pageable)
+     */
+    @Override
+    public Page<TopicDto> findByCriteria(Integer companyId, Integer meetingId, String criteria, Integer page, Integer limit) {
+        verifier.verifyCompanyAndMeeting(companyId, meetingId);
+
+        verifier.verifyPageAndLimit(page, limit, 20);
+
+        // Return empty page for null or blank criteria to prevent unintended full dataset retrieval
+        if (criteria == null || criteria.isBlank()) {
+            return Page.empty(PageRequest.of(page, limit));
+        }
+
+        Pageable pageable = PageRequest.of(page, limit);
+
+        return topicRepository.findByCriteria(meetingId, criteria, pageable)
+                .map(topicMapper::toDto);
     }
 }

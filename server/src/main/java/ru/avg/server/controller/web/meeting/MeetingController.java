@@ -4,16 +4,18 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.avg.server.model.dto.meeting.MeetingDto;
 import ru.avg.server.model.dto.meeting.NewMeetingDto;
 import ru.avg.server.service.meeting.MeetingService;
-
-import java.util.List;
 
 /**
  * REST controller for managing meetings within a company context.
@@ -33,8 +35,8 @@ import java.util.List;
  * activity without overwhelming the logs with read operations.
  * </p>
  *
- * @see MeetingService
  * @author AVG
+ * @see MeetingService
  * @since 1.0
  */
 @RestController
@@ -57,20 +59,38 @@ public class MeetingController {
     private final MeetingService meetingService;
 
     /**
-     * Retrieves all meetings associated with a specific company.
-     * This endpoint returns a list of all meetings for the given company identifier.
+     * Retrieves a paginated list of meetings associated with a specific company.
+     * <p>
+     * This endpoint returns meetings sorted by date in descending order (newest first).
+     * The pagination is controlled by optional {@code page} and {@code limit} parameters,
+     * with default values of 0 and 10 respectively. The maximum allowed limit is 20.
+     * Access is restricted to meetings that belong to the specified company.
+     * <p>
+     * The method logs the request details at DEBUG level and delegates the business logic
+     * to the {@link MeetingService#findAll(Integer, Integer, Integer)} method.
      *
-     * @param companyId the ID of the company for which to retrieve all meetings
-     * @return ResponseEntity containing a list of MeetingDto objects with HTTP status 200 OK
+     * @param companyId the unique identifier of the company (from path variable)
+     *                  must not be null
+     * @param page      the zero-based page number for pagination;
+     *                  must be non-negative, defaults to 0
+     * @param limit     the maximum number of meetings to return per page;
+     *                  must be between 1 and 20 (inclusive), defaults to 10
+     * @return {@link ResponseEntity} containing a {@link Page} of {@link MeetingDto} objects
+     * with HTTP status 200 OK if successful
+     * @see MeetingService#findAll(Integer, Integer, Integer)
+     * @see Page
+     * @see MeetingDto
      */
     @Operation(summary = "Get all meetings", description = "Retrieves all meetings associated with a specific company")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved list of meetings")
     })
     @GetMapping
-    public ResponseEntity<List<MeetingDto>> findAll(@PathVariable Integer companyId) {
-        log.debug("Fetching all meetings for companyId: {}", companyId);
-        List<MeetingDto> meetings = meetingService.findAll(companyId);
+    public ResponseEntity<Page<MeetingDto>> findAll(@PathVariable @NotNull Integer companyId,
+                                                    @RequestParam(defaultValue = "0") @Min(0) Integer page,
+                                                    @RequestParam(defaultValue = "10") @Min(1) @Max(20) Integer limit) {
+        log.debug("Fetching all meetings for companyId={} page={} limit={}", companyId, page, limit);
+        Page<MeetingDto> meetings = meetingService.findAll(companyId, page, limit);
         return ResponseEntity.ok(meetings);
     }
 

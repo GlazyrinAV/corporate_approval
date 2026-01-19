@@ -15,6 +15,7 @@ import ru.avg.server.model.dto.company.mapper.NewCompanyMapper;
 import ru.avg.server.repository.company.CompanyRepository;
 import ru.avg.server.service.company.CompanyService;
 import ru.avg.server.utils.updater.Updater;
+import ru.avg.server.utils.verifier.Verifier;
 
 /**
  * Implementation of {@link CompanyService} providing business logic for managing company entities.
@@ -63,6 +64,12 @@ public class CompanyServiceImpl implements CompanyService {
      * Applies non-null and non-blank fields from the source entity to the target entity.
      */
     private final Updater updater;
+
+    /**
+     * Utility component used for verifying access rights, existence of entities,
+     * and validating input parameters such as pagination limits.
+     */
+    private final Verifier verifier;
 
     /**
      * Saves a new company to the database.
@@ -118,7 +125,6 @@ public class CompanyServiceImpl implements CompanyService {
      * @param companyId the ID of the company to delete
      * @throws CompanyNotFound if no company exists with the given ID
      * @see CompanyRepository#existsById(Object)
-     * @see CompanyRepository#deleteCompanyById(Integer)
      */
     @Override
     @Transactional
@@ -126,7 +132,7 @@ public class CompanyServiceImpl implements CompanyService {
         if (!storage.existsById(companyId)) {
             throw new CompanyNotFound(companyId);
         }
-        storage.deleteCompanyById(companyId);
+        storage.deleteById(companyId);
     }
 
     /**
@@ -176,7 +182,7 @@ public class CompanyServiceImpl implements CompanyService {
      */
     @Override
     public Page<CompanyDto> findAll(Integer page, Integer limit) {
-        checkPagination(page, limit);
+        verifier.verifyPageAndLimit(page, limit, 50);
 
         Pageable pageable = PageRequest.of(page, limit);
 
@@ -213,7 +219,7 @@ public class CompanyServiceImpl implements CompanyService {
      */
     @Override
     public Page<CompanyDto> findByCriteria(String criteria, Integer page, Integer limit) {
-        checkPagination(page, limit);
+        verifier.verifyPageAndLimit(page, limit, 50);
 
         // Return empty page for null or blank criteria to prevent unintended full dataset retrieval
         if (criteria == null || criteria.isBlank()) {
@@ -227,26 +233,5 @@ public class CompanyServiceImpl implements CompanyService {
 
         // Transform entities to DTOs while preserving pagination metadata
         return companyPage.map(companyMapper::toDto);
-    }
-
-    /**
-     * Validates pagination parameters to ensure they are within acceptable ranges.
-     * <p>
-     * This helper method checks that the page number is non-negative and the limit (page size)
-     * is between 1 and 50 (inclusive). If validation fails, an IllegalArgumentException is thrown.
-     * </p>
-     *
-     * @param page  the zero-based page number to validate; must be non-negative
-     * @param limit the number of elements per page to validate; must be between 1 and 50 (inclusive)
-     * @throws IllegalArgumentException if page is negative or limit is not in valid range (1-50)
-     */
-    private void checkPagination(Integer page, Integer limit) {
-        // Validate input parameters
-        if (page == null || page < 0) {
-            throw new IllegalArgumentException("Page must be non-negative");
-        }
-        if (limit == null || limit < 1 || limit > 50) {
-            throw new IllegalArgumentException("Limit must be between 1 and 50");
-        }
     }
 }

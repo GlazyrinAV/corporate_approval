@@ -4,16 +4,18 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.avg.server.model.dto.topic.NewTopicDto;
 import ru.avg.server.model.dto.topic.TopicDto;
 import ru.avg.server.service.topic.TopicService;
-
-import java.util.List;
 
 /**
  * REST controller for managing topics within a meeting.
@@ -33,8 +35,8 @@ import java.util.List;
  * activity without overwhelming the logs with read operations.
  * </p>
  *
- * @see TopicService
  * @author AVG
+ * @see TopicService
  * @since 1.0
  */
 @RestController
@@ -62,18 +64,29 @@ public class TopicController {
      *
      * @param companyId the ID of the company (used for routing and future access control)
      * @param meetingId the ID of the meeting for which to retrieve all topics
-     * @return ResponseEntity containing a list of TopicDto objects with HTTP status 200 OK
+     * @param page      the zero-based page number to retrieve; must be non-negative (default: 0)
+     * @param limit     the maximum number of elements to return per page;
+     *                  must be between 1 and 20 (inclusive, default: 10)
+     * @return a ResponseEntity containing a {@link Page} of {@link TopicDto} objects representing
+     * the topics for the requested page, including full pagination metadata (total elements, total pages, etc.),
+     * with HTTP status 200 (OK)
+     * @see TopicService#findAllByMeetingId(Integer, Integer, Integer, Integer)
+     * @see TopicDto
+     * @see Page
      */
     @Operation(summary = "Get all topics", description = "Retrieves all topics associated with a specific meeting")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved list of topics")
     })
     @GetMapping
-    public ResponseEntity<List<TopicDto>> findAll(
+    public ResponseEntity<Page<TopicDto>> findAll(
             @PathVariable Integer companyId,
-            @PathVariable Integer meetingId) {
-        log.debug("Fetching all topics for meetingId: {} in companyId: {}", meetingId, companyId);
-        List<TopicDto> topics = topicService.findAllByMeetingId(companyId, meetingId);
+            @PathVariable Integer meetingId,
+            @RequestParam(defaultValue = "0") @Min(0) Integer page,
+            @RequestParam(defaultValue = "10") @Min(1) @Max(20) Integer limit) {
+        log.debug("Fetching all topics for meetingId={} in companyId={} page={} limit={}",
+                meetingId, companyId, page, limit);
+        Page<TopicDto> topics = topicService.findAllByMeetingId(companyId, meetingId, page, limit);
         return ResponseEntity.ok(topics);
     }
 
@@ -193,5 +206,51 @@ public class TopicController {
         log.warn("Deleting topic with topicId: {} from meetingId: {} in companyId: {}", topicId, meetingId, companyId);
         topicService.delete(companyId, meetingId, topicId);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Searches for topics by criteria with pagination support.
+     * <p>
+     * This endpoint performs a case-insensitive partial match search on topic titles
+     * and descriptions within the specified meeting context. The results are returned
+     * in a paginated format to support efficient handling of large datasets.
+     * </p>
+     * <p>
+     * If the search criteria is empty or not provided, the method returns all topics
+     * for the meeting (subject to pagination). The maximum length of the search string
+     * is limited to 100 characters to prevent abuse and ensure system stability.
+     * </p>
+     *
+     * @param companyId the ID of the company (for scoping and access control)
+     * @param meetingId the ID of the meeting to which topics belong
+     * @param criteria  the search string to match against topic titles and descriptions;
+     *                  optional, defaults to empty string if not provided;
+     *                  maximum length is 100 characters
+     * @param page      the zero-based page number to retrieve; must be non-negative (default: 0)
+     * @param limit     the maximum number of elements to return per page;
+     *                  must be between 1 and 20 (inclusive, default: 10)
+     * @return a ResponseEntity containing a {@link Page} of {@link TopicDto} objects representing
+     * the topics matching the search criteria for the requested page,
+     * including full pagination metadata (total elements, total pages, etc.),
+     * with HTTP status 200 (OK)
+     * @see TopicService#findByCriteria(Integer, Integer, String, Integer, Integer)
+     * @see TopicDto
+     * @see Page
+     */
+    @Operation(summary = "Search topics by criteria with pagination",
+            description = "Finds topics by partial match on title or description with pagination support")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved page of matching topics"),
+            @ApiResponse(responseCode = "400", description = "Invalid pagination parameters (page < 0 or limit not in 1-20 range) or criteria exceeds 100 characters")
+    })
+    @GetMapping("/search")
+    public ResponseEntity<Page<TopicDto>> findByCriteria(@PathVariable Integer companyId,
+                                                         @PathVariable Integer meetingId,
+                                                         @RequestParam(required = false, defaultValue = "") @Size(max = 100) String criteria,
+                                                         @RequestParam(defaultValue = "0") @Min(0) Integer page,
+                                                         @RequestParam(defaultValue = "10") @Min(1) @Max(20) Integer limit) {
+        log.debug("Finding topics by criteria with pagination(page: {}, limit: {}): {}", page, limit, criteria);
+        Page<TopicDto> topics = topicService.findByCriteria(companyId, meetingId, criteria, page, limit);
+        return ResponseEntity.ok(topics);
     }
 }

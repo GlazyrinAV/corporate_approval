@@ -37,13 +37,10 @@ public interface CompanyRepository extends JpaRepository<Company, Integer> {
      * </p>
      *
      * @param id the unique identifier of the company to delete; must not be null
-     * @return the number of deleted entities (typically 0 if not found, 1 if successfully deleted)
-     * @throws IllegalArgumentException if the provided ID is null
      * @since 1.0
      */
     @Modifying
-    @Query("DELETE FROM Company c WHERE c.id = :id")
-    int deleteCompanyById(@Param("id") Integer id);
+    void deleteById(Integer id);
 
     /**
      * Retrieves a company based on its INN (Individual Taxpayer Number).
@@ -88,10 +85,10 @@ public interface CompanyRepository extends JpaRepository<Company, Integer> {
      * @see Pageable
      * @see Company
      */
-    @Query("SELECT Company AS C FROM Company WHERE " +
-            "(lower(C.title) like lower(concat('%', :criteria, '%'))) OR " +
-            "(lower(C.inn) like lower(concat('%', :criteria, '%'))) ORDER BY C.title")
-    Page<Company> findByCriteria(String criteria, Pageable page);
+    @Query("SELECT c FROM Company AS c WHERE " +
+            "(lower(c.title) like lower(concat('%', :criteria, '%'))) OR " +
+            "(cast(c.inn AS STRING) like concat('%', :criteria, '%')) ORDER BY c.title")
+    Page<Company> findByCriteria(@Param("criteria") String criteria, Pageable page);
 
     /**
      * Retrieves a paginated list of all companies sorted by title in ascending order.
