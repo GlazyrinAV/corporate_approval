@@ -2,6 +2,7 @@ package ru.avg.server.service.company.impl;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +41,20 @@ import ru.avg.server.utils.verifier.Verifier;
 @Service
 @RequiredArgsConstructor
 public class CompanyServiceImpl implements CompanyService {
+
+    /**
+     * Maximum number of companies to return per page in paginated responses.
+     * This value is injected from configuration using the property key "page.maxlimit.company"
+     * and used to validate the limit parameter in paginated methods. It ensures consistent
+     * pagination limits across the company service and prevents excessively large responses.
+     * The value is validated by {@link Verifier#verifyPageAndLimit(Integer, Integer, Integer)}.
+     *
+     * @see #findAll(Integer, Integer)
+     * @see #findByCriteria(String, Integer, Integer)
+     * @see Verifier#verifyPageAndLimit(Integer, Integer, Integer)
+     */
+    @Value("${page.maxlimit.company}")
+    private Integer pageLimit;
 
     /**
      * Repository used for data persistence operations on {@link Company} entities.
@@ -182,7 +197,7 @@ public class CompanyServiceImpl implements CompanyService {
      */
     @Override
     public Page<CompanyDto> findAll(Integer page, Integer limit) {
-        verifier.verifyPageAndLimit(page, limit, 50);
+        verifier.verifyPageAndLimit(page, limit, pageLimit);
 
         Pageable pageable = PageRequest.of(page, limit);
 
@@ -219,7 +234,7 @@ public class CompanyServiceImpl implements CompanyService {
      */
     @Override
     public Page<CompanyDto> findByCriteria(String criteria, Integer page, Integer limit) {
-        verifier.verifyPageAndLimit(page, limit, 50);
+        verifier.verifyPageAndLimit(page, limit, pageLimit);
 
         // Return empty page for null or blank criteria to prevent unintended full dataset retrieval
         if (criteria == null || criteria.isBlank()) {

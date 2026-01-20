@@ -1,6 +1,7 @@
 package ru.avg.server.service.topic.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -37,11 +38,74 @@ import ru.avg.server.utils.verifier.Verifier;
 @Transactional(readOnly = true)
 public class TopicServiceImpl implements TopicService {
 
+    /**
+     * Maximum page limit for pagination operations, injected from configuration property 'page.maxlimit.company'.
+     * This value is used to validate and cap the limit parameter in paginated requests.
+     *
+     * @see #findAllByMeetingId(Integer, Integer, Integer, Integer)
+     * @see #findByCriteria(Integer, Integer, String, Integer, Integer)
+     * @see Verifier#verifyPageAndLimit(Integer, Integer, Integer)
+     */
+    @Value("${page.maxlimit.company}")
+    private Integer pageLimit;
+
+    /**
+     * Repository for data access operations related to topics.
+     * Handles CRUD operations and custom queries for the Topic entity.
+     *
+     * @see TopicRepository
+     * @see Topic
+     */
     private final TopicRepository topicRepository;
+
+    /**
+     * Service responsible for managing voting processes associated with topics.
+     * Handles creation and management of voting records when topics are created.
+     *
+     * @see VotingService
+     * @see #save(Integer, Integer, NewTopicDto)
+     */
     private final VotingService votingService;
+
+    /**
+     * Mapper for converting Topic entities to TopicDto data transfer objects.
+     * Used to transform persistent entities into API-friendly representations.
+     *
+     * @see TopicMapper
+     * @see TopicDto
+     * @see #findById(Integer, Integer, Integer)
+     * @see #findAllByMeetingId(Integer, Integer, Integer, Integer)
+     */
     private final TopicMapper topicMapper;
+
+    /**
+     * Mapper for converting NewTopicDto data transfer objects to Topic entities.
+     * Used to transform API input into persistent entity objects for creation and update operations.
+     *
+     * @see NewTopicMapper
+     * @see NewTopicDto
+     * @see #save(Integer, Integer, NewTopicDto)
+     * @see #update(Integer, Integer, Integer, NewTopicDto)
+     */
     private final NewTopicMapper newTopicMapper;
+
+    /**
+     * Utility service for verifying business rules and access control.
+     * Validates company and meeting existence, as well as pagination parameters.
+     *
+     * @see Verifier
+     * @see Verifier#verifyCompanyAndMeeting(Integer, Integer)
+     * @see Verifier#verifyPageAndLimit(Integer, Integer, Integer)
+     */
     private final Verifier verifier;
+
+    /**
+     * Utility service for updating entity fields.
+     * Handles partial updates by copying non-null fields from source to target entity.
+     *
+     * @see Updater
+     * @see #update(Integer, Integer, Integer, NewTopicDto)
+     */
     private final Updater updater;
 
     /**
@@ -123,8 +187,8 @@ public class TopicServiceImpl implements TopicService {
      * @param page      the zero-based page number to retrieve; must be non-negative
      * @param limit     the maximum number of elements to return per page; must be between 1 and 20 (inclusive)
      * @return a {@link Page} of {@link TopicDto} objects for the requested page,
-     *         including full pagination metadata (total elements, total pages, etc.);
-     *         never {@code null}
+     * including full pagination metadata (total elements, total pages, etc.);
+     * never {@code null}
      * @throws IllegalArgumentException if {@code page} is negative or {@code limit} is not in the range [1,20]
      * @see TopicRepository#findAllByMeetingIdOrderByTitle(Integer, Pageable)
      */
@@ -132,7 +196,7 @@ public class TopicServiceImpl implements TopicService {
     public Page<TopicDto> findAllByMeetingId(Integer companyId, Integer meetingId, Integer page, Integer limit) {
         verifier.verifyCompanyAndMeeting(companyId, meetingId);
 
-        verifier.verifyPageAndLimit(page, limit, 20);
+        verifier.verifyPageAndLimit(page, limit, pageLimit);
 
         Pageable pageable = PageRequest.of(page, limit);
 
@@ -170,8 +234,8 @@ public class TopicServiceImpl implements TopicService {
      * @param page      the zero-based page number to retrieve; must be non-negative
      * @param limit     the maximum number of elements to return per page; must be between 1 and 20 (inclusive)
      * @return a {@link Page} of {@link TopicDto} objects matching the search criteria
-     *         for the requested page, including full pagination metadata;
-     *         never {@code null}
+     * for the requested page, including full pagination metadata;
+     * never {@code null}
      * @throws IllegalArgumentException if {@code page} is negative or {@code limit} is not in the range [1,20]
      * @see TopicRepository#findByCriteria(Integer, String, Pageable)
      */
@@ -179,7 +243,7 @@ public class TopicServiceImpl implements TopicService {
     public Page<TopicDto> findByCriteria(Integer companyId, Integer meetingId, String criteria, Integer page, Integer limit) {
         verifier.verifyCompanyAndMeeting(companyId, meetingId);
 
-        verifier.verifyPageAndLimit(page, limit, 20);
+        verifier.verifyPageAndLimit(page, limit, pageLimit);
 
         // Return empty page for null or blank criteria to prevent unintended full dataset retrieval
         if (criteria == null || criteria.isBlank()) {

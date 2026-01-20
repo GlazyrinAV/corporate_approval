@@ -9,8 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.avg.server.model.dto.participant.MeetingParticipantCreationDto;
 import ru.avg.server.model.dto.participant.MeetingParticipantDto;
+import ru.avg.server.model.dto.participant.NewMeetingParticipantDto;
 import ru.avg.server.service.participant.MeetingParticipantService;
 
 import java.util.List;
@@ -152,7 +152,7 @@ public class MeetingParticipantController {
     public ResponseEntity<List<MeetingParticipantDto>> saveMeetingParticipant(
             @PathVariable Integer companyId,
             @PathVariable Integer meetingId,
-            @RequestBody @Valid MeetingParticipantCreationDto creationDto) {
+            @RequestBody @Valid NewMeetingParticipantDto creationDto) {
         log.debug("Adding participants to meeting: {} with data: {}", meetingId, creationDto);
         List<MeetingParticipantDto> participants = meetingParticipantService.save(companyId, meetingId, creationDto.getPotentialParticipants());
         return ResponseEntity.status(HttpStatus.CREATED).body(participants);

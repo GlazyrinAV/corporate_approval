@@ -120,6 +120,26 @@ public class Verifier {
         }
     }
 
+    /**
+     * Validates the page and limit parameters used for pagination.
+     * <p>
+     * This method ensures that:
+     * <ul>
+     *   <li>The maximum limit is positive and valid</li>
+     *   <li>The page number is non-negative</li>
+     *   <li>The limit is within the valid range [1, maxLimit]</li>
+     * </ul>
+     * </p>
+     * <p>
+     * This method is typically used in service layers to validate pagination parameters
+     * before performing database queries, preventing invalid or potentially harmful requests.
+     * </p>
+     *
+     * @param page     the zero-based page number to retrieve; must be non-negative
+     * @param limit    the maximum number of elements to return per page; must be between 1 and maxLimit (inclusive)
+     * @param maxLimit the maximum allowed value for limit; must be positive
+     * @throws IllegalArgumentException if any parameter fails validation
+     */
     public void verifyPageAndLimit(Integer page, Integer limit, Integer maxLimit) {
         // Validate input parameters
         if (maxLimit == null || maxLimit <= 0) {
@@ -129,7 +149,7 @@ public class Verifier {
             throw new IllegalArgumentException("Page must be non-negative");
         }
         if (limit == null || limit < 1 || limit > maxLimit) {
-            throw new IllegalArgumentException("Limit must be between 1 and 50");
+            throw new IllegalArgumentException("Limit must be between 1 and " + maxLimit);
         }
     }
 }

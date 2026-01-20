@@ -1,6 +1,7 @@
 package ru.avg.server.service.meeting.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -44,6 +45,19 @@ import java.util.Objects;
 @Service
 @RequiredArgsConstructor
 public class MeetingServiceImpl implements MeetingService {
+
+    /**
+     * Maximum number of meetings to return per page in paginated responses.
+     * This value is injected from configuration using the property key "page.maxlimit.meeting"
+     * and used to validate the limit parameter in paginated methods. It ensures consistent
+     * pagination limits across the meeting service and prevents excessively large responses.
+     * The value is validated by {@link Verifier#verifyPageAndLimit(Integer, Integer, Integer)}.
+     *
+     * @see #findAll(Integer, Integer, Integer)
+     * @see Verifier#verifyPageAndLimit(Integer, Integer, Integer)
+     */
+    @Value("${page.maxlimit.meeting}")
+    private Integer pageLimit;
 
     /**
      * Repository for managing persistence and retrieval of meeting entities.
@@ -281,7 +295,7 @@ public class MeetingServiceImpl implements MeetingService {
     public Page<MeetingDto> findAll(Integer companyId, Integer page, Integer limit) {
         verifier.verifyCompany(companyId);
 
-        verifier.verifyPageAndLimit(page, limit, 20);
+        verifier.verifyPageAndLimit(page, limit, pageLimit);
 
         Pageable pageable = PageRequest.of(page, limit);
 

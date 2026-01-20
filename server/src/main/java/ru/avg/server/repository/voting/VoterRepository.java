@@ -45,7 +45,7 @@ public interface VoterRepository extends JpaRepository<Voter, Integer> {
      * @param topicId the ID of the topic
      * @return an {@link Optional} containing the voter if found, or empty otherwise
      */
-    @Query("SELECT v FROM Voter v WHERE v.participant.id = :participantId AND v.topic.id = :topicId")
+    @Query("SELECT v FROM Voter v WHERE v.meetingParticipant.id = :participantId AND v.topic.id = :topicId")
     Optional<Voter> findByParticipantIdAndTopicId(
             @Param("participantId") Integer participantId,
             @Param("topicId") Integer topicId);
@@ -56,7 +56,7 @@ public interface VoterRepository extends JpaRepository<Voter, Integer> {
      * @param topicId the ID of the topic
      * @return the count of voters who voted 'FOR'
      */
-    @Query("SELECT COUNT(v) FROM Voter v WHERE v.topic.id = :topicId AND v.vote.title = 'ЗА'")
+    @Query("SELECT COUNT(v) FROM Voter v WHERE v.topic.id = :topicId AND v.vote = 'ЗА'")
     long countVotesForByTopicId(@Param("topicId") Integer topicId);
 
     /**
@@ -65,6 +65,6 @@ public interface VoterRepository extends JpaRepository<Voter, Integer> {
      * @param topicId the ID of the topic
      * @return the count of voters who voted 'AGAINST'
      */
-    @Query("SELECT COUNT(v) FROM Voter v WHERE v.topic.id = :topicId AND v.vote.title = 'ПРОТИВ'")
+    @Query("SELECT COUNT(v) FROM Voter v WHERE v.topic.id = :topicId AND v.vote = 'ПРОТИВ'")
     long countVotesAgainstByTopicId(@Param("topicId") Integer topicId);
 }

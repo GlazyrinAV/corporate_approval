@@ -1,0 +1,23 @@
+{
+  "properties": [
+    {
+      "name": "page.maxlimit.company",
+      "type": "java.lang.String",
+      "description": "Maximum number of companies to be displayed on the page."
+    },
+    {
+      "name": "page.maxlimit.participant",
+      "type": "java.lang.String",
+      "description": "Maximum number of participants to be displayed on the page."
+    },
+    {
+      "name": "page.maxlimit.meeting",
+      "type": "java.lang.String",
+      "description": "Maximum number of meetings to be displayed on the page."
+    },
+    {
+      "name": "page.maxlimit.topic",
+      "type": "java.lang.String",
+      "description": "Maximum number of topics to be displayed on the page."
+    }
+  ] }

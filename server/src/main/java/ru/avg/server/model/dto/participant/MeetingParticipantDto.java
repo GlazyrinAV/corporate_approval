@@ -82,7 +82,7 @@ public class MeetingParticipantDto {
      */
     @Valid
     @NotNull(message = "Participant must not be null")
-    private ParticipantDto participant;
+    private Integer participantId;
 
     /**
      * The attendance status of the participant in the meeting.

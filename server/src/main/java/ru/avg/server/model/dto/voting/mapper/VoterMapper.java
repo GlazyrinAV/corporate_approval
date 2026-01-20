@@ -45,17 +45,6 @@ public class VoterMapper {
     private final MeetingParticipantRepository meetingParticipantRepository;
 
     /**
-     * Mapper responsible for converting between {@link ru.avg.server.model.participant.MeetingParticipant} entities
-     * and {@link ru.avg.server.model.dto.participant.MeetingParticipantDto} objects.
-     * This dependency is injected by Spring and is used to transform the participant portion
-     * of a {@link Voter} entity to its DTO representation during the {@link #toDto(Voter)} operation.
-     *
-     * @see MeetingParticipantMapper#toDto(ru.avg.server.model.participant.MeetingParticipant)
-     * @see #toDto(Voter)
-     */
-    private final MeetingParticipantMapper meetingParticipantMapper;
-
-    /**
      * Repository used to access and retrieve topic entities from the persistence layer.
      * This dependency is injected by Spring and is used to validate the existence of a topic
      * when converting a {@link VoterDto} to a {@link Voter} entity by looking up the topic by ID.
@@ -109,7 +98,7 @@ public class VoterMapper {
         if (voterDto == null) {
             throw new IllegalArgumentException("VoterDto must not be null");
         }
-        if (voterDto.getParticipant() == null) {
+        if (voterDto.getMeetingParticipantId() == null) {
             throw new IllegalArgumentException("Participant in VoterDto must not be null");
         }
         VoteType voteType = VOTE_TYPE_MAP.get(voterDto.getVote());
@@ -120,8 +109,8 @@ public class VoterMapper {
         return Voter.builder()
                 .id(voterDto.getId())
                 .isRelatedPartyDeal(voterDto.isRelatedPartyDeal())
-                .participant(meetingParticipantRepository.findById(voterDto.getParticipant().getId())
-                        .orElseThrow(() -> new MeetingParticipantNotFound(voterDto.getParticipant().getId())))
+                .meetingParticipant(meetingParticipantRepository.findById(voterDto.getMeetingParticipantId())
+                        .orElseThrow(() -> new MeetingParticipantNotFound(voterDto.getMeetingParticipantId())))
                 .topic(topicRepository.findById(voterDto.getTopicId())
                         .orElseThrow(() -> new TopicNotFound(voterDto.getTopicId())))
                 .voting(votingRepository.findById(voterDto.getVotingId())
@@ -145,7 +134,7 @@ public class VoterMapper {
         if (voter == null) {
             throw new IllegalArgumentException("Voter must not be null");
         }
-        if (voter.getParticipant() == null) {
+        if (voter.getMeetingParticipant() == null) {
             throw new IllegalArgumentException("Voter must have an associated participant");
         }
         if (voter.getTopic() == null) {
@@ -159,7 +148,7 @@ public class VoterMapper {
                 .id(voter.getId())
                 .vote(voter.getVote().getTitle())
                 .isRelatedPartyDeal(voter.isRelatedPartyDeal())
-                .participant(meetingParticipantMapper.toDto(voter.getParticipant()))
+                .meetingParticipantId(voter.getMeetingParticipant().getId())
                 .topicId(voter.getTopic().getId())
                 .votingId(voter.getVoting().getId())
                 .build();

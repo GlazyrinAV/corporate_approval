@@ -2,6 +2,7 @@ package ru.avg.server.model.dto.voting;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.Builder;
 import lombok.Data;
 import ru.avg.server.model.dto.participant.MeetingParticipantDto;
@@ -24,9 +25,9 @@ import ru.avg.server.model.dto.participant.MeetingParticipantDto;
  * especially in test scenarios and service implementations.
  * </p>
  *
+ * @author AVG
  * @see ru.avg.server.model.voting.Voter for the corresponding entity
  * @see ru.avg.server.model.voting.VoteType for valid vote types
- * @author AVG
  * @since 1.0
  */
 @Data
@@ -81,8 +82,8 @@ public class VoterDto {
      * @see jakarta.validation.constraints.NotNull
      */
     @Valid
-    @NotNull(message = "Participant must not be null")
-    private MeetingParticipantDto participant;
+    @Positive
+    private Integer meetingParticipantId;
 
     /**
      * The identifier of the topic being voted on in this session.

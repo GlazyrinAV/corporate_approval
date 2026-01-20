@@ -26,13 +26,13 @@ import java.util.List;
  * provides a fluent API for object construction.
  * </p>
  *
- * @see MeetingParticipantDto
  * @author AVG
+ * @see MeetingParticipantDto
  * @since 1.0
  */
 @Data
 @Builder
-public class MeetingParticipantCreationDto {
+public class NewMeetingParticipantDto {
 
     /**
      * List of potential participants to be added to a meeting.
@@ -47,21 +47,4 @@ public class MeetingParticipantCreationDto {
     @Valid
     @NotNull(message = "List of potential participants must not be null")
     private List<@Valid MeetingParticipantDto> potentialParticipants = new ArrayList<>();
-
-    /**
-     * Adds a participant to the list of potential participants.
-     * This method provides a convenient way to add participants to the list after DTO creation.
-     * The participant is added to the internal list and will be processed when the DTO is handled
-     * by the service layer.
-     *
-     * @param participant the MeetingParticipantDto to add; must not be null
-     * @throws IllegalArgumentException if participant is null
-     * @see MeetingParticipantDto
-     */
-    public void addParticipant(MeetingParticipantDto participant) {
-        if (participant == null) {
-            throw new IllegalArgumentException("Participant cannot be null");
-        }
-        potentialParticipants.add(participant);
-    }
 }

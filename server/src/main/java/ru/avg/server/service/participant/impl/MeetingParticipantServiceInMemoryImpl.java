@@ -169,7 +169,7 @@ public class MeetingParticipantServiceInMemoryImpl implements MeetingParticipant
                 .stream()
                 .filter(ParticipantDto::getIsActive)
                 .map(meetingParticipantMapper::fromParticipantDto)
-                .filter(dto -> !currentParticipantIds.contains(dto.getParticipant().getId()))
+                .filter(dto -> !currentParticipantIds.contains(dto.getParticipantId()))
                 .peek(dto -> dto.setMeetingId(meetingId))
                 .toList();
     }

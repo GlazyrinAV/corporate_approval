@@ -23,7 +23,7 @@ import java.util.List;
  * </p>
  *
  * @see ru.avg.server.model.voting.Voting for the corresponding entity
- * @see VotingCreationDto for the creation-specific variant
+ * @see NewVotingDto for the creation-specific variant
  * @author AVG
  * @since 1.0
  */

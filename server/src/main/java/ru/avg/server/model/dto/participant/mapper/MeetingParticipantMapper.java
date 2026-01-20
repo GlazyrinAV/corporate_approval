@@ -3,10 +3,12 @@ package ru.avg.server.model.dto.participant.mapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import ru.avg.server.exception.meeting.MeetingNotFound;
+import ru.avg.server.exception.participant.ParticipantNotFound;
 import ru.avg.server.model.dto.participant.MeetingParticipantDto;
 import ru.avg.server.model.dto.participant.ParticipantDto;
 import ru.avg.server.model.participant.MeetingParticipant;
 import ru.avg.server.repository.meeting.MeetingRepository;
+import ru.avg.server.repository.participant.ParticipantRepository;
 
 /**
  * Mapper component responsible for bidirectional conversion between {@link MeetingParticipant} entities
@@ -23,11 +25,11 @@ import ru.avg.server.repository.meeting.MeetingRepository;
  * It delegates participant mapping to {@link ParticipantMapper}, maintaining separation of concerns.
  * </p>
  *
+ * @author AVG
  * @see MeetingParticipant
  * @see MeetingParticipantDto
  * @see ParticipantMapper
  * @see MeetingRepository
- * @author AVG
  * @since 1.0
  */
 @Component
@@ -47,15 +49,12 @@ public class MeetingParticipantMapper {
     private final MeetingRepository meetingRepository;
 
     /**
-     * Mapper responsible for bidirectional conversion between {@link ru.avg.server.model.participant.Participant}
-     * entities and {@link ParticipantDto} objects.
-     * This dependency is injected by Spring and used to handle the participant-specific
-     * portion of the mapping, abstracting participant mapping logic from meeting-participant
-     * relationship mapping.
-     *
-     * @see ParticipantMapper
+     * Repository used to fetch participant entities by ID when mapping meeting-participant DTOs.
+     * This dependency is injected by Spring and used to validate that the participant ID
+     * provided in the DTO corresponds to an existing participant, throwing
+     * {@link ParticipantNotFound} if not found.
      */
-    private final ParticipantMapper participantMapper;
+    private final ParticipantRepository participantRepository;
 
     /**
      * Converts a {@link MeetingParticipantDto} object into a {@link MeetingParticipant} entity.
@@ -78,7 +77,7 @@ public class MeetingParticipantMapper {
      * @param dto the DTO containing meeting-participant data, must not be {@code null} and must have a non-null meetingId
      * @return a fully constructed {@link MeetingParticipant} entity with mapped values and resolved relationships
      * @throws IllegalArgumentException if {@code dto} is {@code null} or if {@code meetingId} is null
-     * @throws MeetingNotFound if the {@code meetingId} in the DTO does not correspond to any existing meeting
+     * @throws MeetingNotFound          if the {@code meetingId} in the DTO does not correspond to any existing meeting
      * @see MeetingParticipant#builder()
      * @see MeetingRepository#findById(Object)
      * @see ParticipantMapper#fromDto(ParticipantDto)
@@ -97,7 +96,8 @@ public class MeetingParticipantMapper {
                 .isPresent(dto.getIsPresent())
                 .meeting(meetingRepository.findById(dto.getMeetingId())
                         .orElseThrow(() -> new MeetingNotFound(dto.getMeetingId())))
-                .participant(participantMapper.fromDto(dto.getParticipant()))
+                .participant(participantRepository.findById(dto.getParticipantId())
+                        .orElseThrow(() -> new ParticipantNotFound(dto.getParticipantId())))
                 .build();
     }
 
@@ -131,7 +131,7 @@ public class MeetingParticipantMapper {
                 .id(participant.getId())
                 .meetingId(participant.getMeeting() != null ? participant.getMeeting().getId() : null)
                 .isPresent(participant.isPresent())
-                .participant(participantMapper.toDto(participant.getParticipant()))
+                .participantId(participant.getId())
                 .build();
     }
 
@@ -161,8 +161,7 @@ public class MeetingParticipantMapper {
         }
 
         return MeetingParticipantDto.builder()
-                .id(participant.getId())
-                .participant(participant)
+                .participantId(participant.getId())
                 .isPresent(false)
                 .build();
     }

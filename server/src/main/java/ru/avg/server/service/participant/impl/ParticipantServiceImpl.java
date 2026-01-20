@@ -2,6 +2,7 @@ package ru.avg.server.service.participant.impl;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -49,6 +50,20 @@ import java.util.Objects;
 @Service
 @RequiredArgsConstructor
 public class ParticipantServiceImpl implements ParticipantService {
+
+    /**
+     * Maximum number of participants to return per page in paginated responses.
+     * This value is injected from configuration using the property key "page.maxlimit.participant"
+     * and used to validate the limit parameter in paginated methods. It ensures consistent
+     * pagination limits across the participant service and prevents excessively large responses.
+     * The value is validated by {@link Verifier#verifyPageAndLimit(Integer, Integer, Integer)}.
+     *
+     * @see #findAll(Integer, Integer, Integer)
+     * @see #findByCriteria(Integer, String, Integer, Integer)
+     * @see Verifier#verifyPageAndLimit(Integer, Integer, Integer)
+     */
+    @Value("${page.maxlimit.participant}")
+    private Integer pageLimit;
 
     /**
      * Repository for managing participant entities in the persistence layer.
@@ -196,9 +211,13 @@ public class ParticipantServiceImpl implements ParticipantService {
 
         boolean hasActiveMeetings = meetingParticipantRepository.findByParticipantId(participantId).stream()
                 .map(meetingParticipantMapper::toDto)
-                .anyMatch(meetingParticipantDto ->
-                        Boolean.TRUE.equals(meetingParticipantDto.getParticipant().getIsActive()));
+                .anyMatch(meetingParticipantDto -> {
+                            Participant participant = participantRepository.findById(meetingParticipantDto.getParticipantId())
+                                    .orElseThrow(() -> new ParticipantNotFound(meetingParticipantDto.getParticipantId()));
 
+                            return Boolean.TRUE.equals(participant.getIsActive());
+                        }
+                );
         if (!hasActiveMeetings) {
             participantRepository.deleteById(participantId);
         } else {
@@ -281,7 +300,7 @@ public class ParticipantServiceImpl implements ParticipantService {
     public Page<ParticipantDto> findAll(Integer companyId, Integer page, Integer limit) {
         verifier.verifyCompany(companyId);
 
-        verifier.verifyPageAndLimit(page, limit, 20);
+        verifier.verifyPageAndLimit(page, limit, pageLimit);
 
         Pageable pageable = PageRequest.of(page, limit);
 
@@ -345,7 +364,7 @@ public class ParticipantServiceImpl implements ParticipantService {
     public Page<ParticipantDto> findByCriteria(Integer companyId, String criteria, Integer page, Integer limit) {
         verifier.verifyCompany(companyId);
 
-        verifier.verifyPageAndLimit(page, limit, 20);
+        verifier.verifyPageAndLimit(page, limit, pageLimit);
 
         // Return empty page for null or blank criteria to prevent unintended full dataset retrieval
         if (criteria == null || criteria.isBlank()) {

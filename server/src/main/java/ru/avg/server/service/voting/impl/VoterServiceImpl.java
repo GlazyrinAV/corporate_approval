@@ -100,7 +100,7 @@ public class VoterServiceImpl implements VoterService {
         // Extract existing voter participants as a Set for O(1) lookup
         Set<Integer> existingParticipantIds = voting.getVoters() != null
                 ? voting.getVoters().stream()
-                .map(voter -> voter.getParticipant().getId())
+                .map(voter -> voter.getMeetingParticipant().getId())
                 .collect(Collectors.toSet())
                 : Set.of();
 
@@ -114,7 +114,7 @@ public class VoterServiceImpl implements VoterService {
                     .filter(participant -> !existingParticipantIds.contains(participant.getId()))
                     .map(participant -> Voter.builder()
                             .voting(voting)
-                            .participant(participant)
+                            .meetingParticipant(participant)
                             .vote(VoteType.NOT_VOTED)
                             .topic(voting.getTopic())
                             .build())

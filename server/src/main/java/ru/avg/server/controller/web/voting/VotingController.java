@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.avg.server.model.dto.voting.VotingCreationDto;
+import ru.avg.server.model.dto.voting.NewVotingDto;
 import ru.avg.server.model.dto.voting.VotingDto;
 import ru.avg.server.service.voting.VotingService;
 
@@ -71,7 +71,7 @@ public class VotingController {
      * with HTTP status 201 Created
      * @throws jakarta.validation.ConstraintViolationException if the input data fails validation
      * @see VotingService#makeVote(Integer, Integer, Integer, java.util.List)
-     * @see VotingCreationDto
+     * @see NewVotingDto
      * @see VotingDto
      */
     @Operation(summary = "Submit votes", description = "Submits votes for a specific topic identified by topicId")
@@ -84,7 +84,7 @@ public class VotingController {
             @PathVariable Integer companyId,
             @PathVariable Integer meetingId,
             @PathVariable Integer topicId,
-            @Valid @RequestBody VotingCreationDto voters) {
+            @Valid @RequestBody NewVotingDto voters) {
         log.debug("Submitting votes for topicId: {} in meeting: {} of company: {}", topicId, meetingId, companyId);
         VotingDto votingDto = votingService.makeVote(companyId, meetingId, topicId, voters.getVoters());
         return ResponseEntity.status(HttpStatus.CREATED).body(votingDto);

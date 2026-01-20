@@ -99,7 +99,7 @@ public class Voter {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "meeting_participant_id", nullable = false)
-    private MeetingParticipant participant;
+    private MeetingParticipant meetingParticipant;
 
     /**
      * Reference to the topic that is the subject of this vote.

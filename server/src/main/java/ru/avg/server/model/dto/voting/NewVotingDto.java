@@ -29,14 +29,14 @@ import java.util.List;
  * especially in test scenarios and service implementations.
  * </p>
  *
+ * @author AVG
  * @see VoterDto
  * @see VotingDto
- * @author AVG
  * @since 1.0
  */
 @Data
 @Builder
-public class VotingCreationDto {
+public class NewVotingDto {
 
     /**
      * List of voters participating in the voting session.
@@ -57,21 +57,4 @@ public class VotingCreationDto {
     @Valid
     @NotNull(message = "List of voters must not be null")
     private List<@Valid VoterDto> voters = new ArrayList<>();
-
-    /**
-     * Adds a voter to the voting session.
-     * This method provides a convenient way to add voters to the list after DTO creation.
-     * The voter is added to the internal list and will be processed when the DTO is handled
-     * by the service layer.
-     *
-     * @param voter the VoterDto to add; must not be null
-     * @throws IllegalArgumentException if voter is null
-     * @see VoterDto
-     */
-    public void addVoter(@Valid VoterDto voter) {
-        if (voter == null) {
-            throw new IllegalArgumentException("Voter cannot be null");
-        }
-        voters.add(voter);
-    }
 }
