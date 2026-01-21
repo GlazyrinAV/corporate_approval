@@ -14,7 +14,6 @@
     <name>server</name>
     <description>Backend server for corporate governance and meeting management system</description>
 
-    <!-- Properly filled license, developer, and SCM metadata -->
     <licenses>
         <license>
             <name>Apache License, Version 2.0</name>
@@ -38,6 +37,7 @@
         <lombok.version>1.18.42</lombok.version>
         <springdoc.version>3.0.1</springdoc.version>
         <webjars-swaggerui.version>5.31.0</webjars-swaggerui.version>
+        <docx4j.version>11.5.9</docx4j.version>
     </properties>
 
     <dependencies>
@@ -96,6 +96,14 @@
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>${springdoc.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- DOCX editor -->
+        <dependency>
+            <groupId>org.docx4j</groupId>
+            <artifactId>docx4j-core</artifactId>
+            <version>${docx4j.version}</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
