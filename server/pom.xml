@@ -101,9 +101,9 @@
 
         <!-- DOCX editor -->
         <dependency>
-            <groupId>org.docx4j</groupId>
-            <artifactId>docx4j-core</artifactId>
-            <version>${docx4j.version}</version>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.5.1</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
