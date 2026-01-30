@@ -8,6 +8,7 @@ create table public.company
             primary key,
     title                  varchar               not null,
     inn                    bigint                not null unique,
+    registration_number    bigint                not null unique,
     company_type           varchar               not null
         constraint check_name
             check (company.company_type in ('LLC', 'JSC')),
@@ -16,37 +17,48 @@ create table public.company
 
 create table public.participant
 (
-    id         integer generated always as identity
+    id                   integer generated always as identity
         constraint participant_pk
             primary key,
-    name       varchar not null,
-    share      double precision,
-    company_id integer not null
+    name                 varchar      not null,
+    date_of_birth        date         not null,
+    id_document          varchar(50)  not null,
+    id_document_data     varchar(100) not null,
+    registration_address varchar(200) not null,
+    nominal_share        double precision,
+    share                double precision,
+    company_id           integer      not null
         constraint participant_company_id_fk
             references public.company (id) on delete cascade,
-    type       varchar not null
+    type                 varchar      not null
         constraint check_type
             check (type in ('OWNER', 'MEMBER_OF_BOARD')),
-    is_active boolean default true
+    is_active            boolean default true
 );
 
 create table public.meeting
 (
-    id           integer generated always as identity
+    id                    integer generated always as identity
         constraint meeting_pk
             primary key,
-    company_id   integer not null
+    company_id            integer             not null
         constraint meeting_company_id_fk
             references public.company (id) on delete cascade,
-    type         varchar not null
+    type                  varchar             not null
         constraint check_type
             check (type in ('BOD', 'FMP', 'FMS')),
-    date         date    not null,
-    address      varchar not null,
-    secretary_id integer
+    date_of_meeting       date                not null,
+    date_of_protocol      date                not null,
+    start_of_registration time with time zone not null,
+    end_of_registration   time with time zone not null,
+    start_of_meeting      time with time zone not null,
+    end_of_meeting        time with time zone not null,
+    address               varchar             not null,
+    town                  varchar(50)         not null,
+    secretary_id          integer
         constraint meeting_participant_id_fk_2
             references public.participant (id) on DELETE cascade,
-    chairman_id  integer
+    chairman_id           integer
         constraint meeting_participant_id_fk_3
             references public.participant (id) on DELETE cascade
 );
@@ -106,12 +118,16 @@ create table voter
 );
 
 insert into company
-values (DEFAULT, 'Company 1', 7810101010, 'LLC', false);
+values (DEFAULT, 'Company 1', 7810101010, 1234567890, 'LLC', false);
 insert into participant
-values (DEFAULT, 'Alex', 20, 1, 'OWNER', true);
+values (DEFAULT, 'Alex', '1964-01-01'::date, 'passport', 'data of passport', 'SPB',
+        100, 20, 1, 'OWNER', true);
 insert into participant
-values (DEFAULT, 'Jack', 40, 1, 'OWNER', true);
+values (DEFAULT, 'Jack', '1964-01-01'::date, 'passport', 'data of passport', 'SPB',
+        100, 20, 1, 'OWNER', true);
 insert into meeting
-values (DEFAULT, 1, 'FMP', '11.11.11', 'SPb');
+values (DEFAULT, 1, 'FMP', '11.11.11', '11.11.11',
+        '19:06+03', '20:06 +03', '20:07 +03', '21:07 +03',
+        'Nevski prospects str.', 'Minsk');
 insert into meeting_participant
 values (DEFAULT, 1, 1, true);

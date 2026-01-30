@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.avg.server.model.company.Company;
 
+import java.time.LocalDate;
+
 /**
  * Entity representing a participant in a company, such as a shareholder, founder, or board member.
  * Maps to the 'participant' database table.
@@ -68,6 +70,41 @@ public class Participant {
      */
     @Column(name = "name", nullable = false)
     private String name;
+
+    /**
+     * Date of birth of the participant.
+     * Required for identification and compliance purposes; cannot be null.
+     */
+    @Column(name = "date_of_birth", nullable = false)
+    private LocalDate dateOfBirth;
+
+    /**
+     * Type of identification document (e.g., passport, driver's license).
+     * Cannot be null — all participants must provide valid ID documentation.
+     */
+    @Column(name = "id_document", nullable = false)
+    private String idDocument;
+
+    /**
+     * Details of the identification document (number, issuing authority, etc.).
+     * Cannot be null — ensures complete identification records are maintained.
+     */
+    @Column(name = "id_document_data", nullable = false)
+    private String idDocumentData;
+
+    /**
+     * Official registration address of the participant.
+     * Used for legal and communication purposes; cannot be null.
+     */
+    @Column(name = "registration_address", nullable = false)
+    private String registrationAddress;
+
+    /**
+     * Nominal share value held by the participant.
+     * Represents the face value of shares; may be null for non-shareholders.
+     */
+    @Column(name = "nominal_share")
+    private Double nominalShare;
 
     /**
      * Ownership share or percentage held by the participant in the company.

@@ -9,6 +9,7 @@ import ru.avg.server.model.company.Company;
 import ru.avg.server.model.participant.Participant;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 /**
  * Entity representing a meeting within the system.
@@ -27,7 +28,7 @@ import java.time.LocalDate;
  *       enforced as non-null to ensure every meeting belongs to a company.</li>
  *   <li>{@code type}: Classification of the meeting (e.g., Annual, Extraordinary) stored
  *       as an enum using string representation in the database.</li>
- *   <li>{@code date}: The scheduled date of the meeting; cannot be null.</li>
+ *   <li>{@code dateOfMeeting}: The scheduled date of the meeting; cannot be null.</li>
  *   <li>{@code address}: Physical location where the meeting will take place; limited to 512 characters
  *       and required for logistical tracking.</li>
  *   <li>{@code secretary} and {@code chairman}: Optional references to {@link Participant}
@@ -89,8 +90,50 @@ public class Meeting {
      * The date on which the meeting is scheduled to occur.
      * Cannot be null — every meeting must have a defined date.
      */
-    @Column(name = "date", nullable = false)
-    private LocalDate date;
+    @Column(name = "date_of_meeting", nullable = false)
+    private LocalDate dateOfMeeting;
+
+    /**
+     * The date on which the meeting protocol is created or finalized.
+     * Cannot be null — a protocol date must be recorded for all meetings.
+     */
+    @Column(name = "date_of_protocol", nullable = false)
+    private LocalDate dateOfProtocol;
+
+    /**
+     * The time when participant registration begins for the meeting.
+     * Cannot be null — registration start time must be defined.
+     */
+    @Column(name = "start_of_registration", nullable = false)
+    private LocalTime starOfRegistration;
+
+    /**
+     * The time when participant registration ends for the meeting.
+     * Cannot be null — registration end time must be defined.
+     */
+    @Column(name = "end_of_registration", nullable = false)
+    private LocalTime endOfRegistration;
+
+    /**
+     * The scheduled start time of the meeting itself.
+     * Cannot be null — the meeting must have a defined start time.
+     */
+    @Column(name = "start_of_meeting", nullable = false)
+    private LocalTime startOfMeeting;
+
+    /**
+     * The scheduled end time of the meeting.
+     * Cannot be null — the meeting must have a defined end time.
+     */
+    @Column(name = "end_of_meeting", nullable = false)
+    private LocalTime endOfMeeting;
+
+    /**
+     * The town or city where the meeting takes place.
+     * Cannot be null — location at the town level must be specified.
+     */
+    @Column(name = "town", nullable = false)
+    private String town;
 
     /**
      * Physical address or location where the meeting will be held.

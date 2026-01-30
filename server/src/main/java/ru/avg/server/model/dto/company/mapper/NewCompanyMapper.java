@@ -77,6 +77,7 @@ public class NewCompanyMapper {
         return Company.builder()
                 .title(companyDto.getTitle())
                 .inn(companyDto.getInn())
+                .registrationNumber(companyDto.getRegistrationNumber())
                 .companyType(companyType)
                 .hasBoardOfDirectors(companyDto.getHasBoardOfDirectors())
                 .build();

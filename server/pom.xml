@@ -38,6 +38,7 @@
         <springdoc.version>3.0.1</springdoc.version>
         <webjars-swaggerui.version>5.31.0</webjars-swaggerui.version>
         <docx4j.version>11.5.9</docx4j.version>
+        <api.version>1.0</api.version>
     </properties>
 
     <dependencies>

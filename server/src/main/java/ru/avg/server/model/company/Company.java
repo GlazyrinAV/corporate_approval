@@ -21,6 +21,8 @@ import lombok.NoArgsConstructor;
  *   <li>{@code title}: Official business name of the company; must not be null.</li>
  *   <li>{@code inn}: Individual Taxpayer Number (INN) — a 10-digit tax identification number;
  *       must be unique across all companies.</li>
+ *   <li>{@code registrationNumber}: Official state registration number assigned upon incorporation;
+ *       must not be null and ensures legal traceability.</li>
  *   <li>{@code companyType}: Classification of the company (e.g., LLC, JSC) stored as an
  *       enum value in the database using string representation.</li>
  *   <li>{@code hasBoardOfDirectors}: Boolean flag indicating whether the company has
@@ -72,6 +74,13 @@ public class Company {
      */
     @Column(name = "inn", nullable = false, unique = true)
     private Long inn;
+
+    /**
+     * Official state registration number assigned to the company upon incorporation.
+     * Used for legal and governmental identification; must not be null and must be unique.
+     */
+    @Column(name = "registration_number", nullable = false, unique = true)
+    private Long registrationNumber;
 
     /**
      * Type of the company (e.g., LLC, JSC) represented as an enum.

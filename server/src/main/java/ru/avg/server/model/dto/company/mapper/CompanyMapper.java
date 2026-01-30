@@ -47,6 +47,7 @@ public class CompanyMapper {
                 .id(companyDto.getId())
                 .title(companyDto.getTitle())
                 .inn(companyDto.getInn())
+                .registrationNumber(companyDto.getRegistrationNumber())
                 .companyType(ru.avg.server.model.company.CompanyType.valueOf(companyDto.getCompanyType()))
                 .hasBoardOfDirectors(companyDto.getHasBoardOfDirectors())
                 .build();
@@ -73,6 +74,7 @@ public class CompanyMapper {
                 .id(company.getId())
                 .title(company.getTitle())
                 .inn(company.getInn())
+                .registrationNumber(company.getRegistrationNumber())
                 .companyType(company.getCompanyType().name())
                 .hasBoardOfDirectors(company.getHasBoardOfDirectors())
                 .build();

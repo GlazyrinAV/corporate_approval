@@ -27,7 +27,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @OpenAPIDefinition(
         info = @Info(
                 title = "Corporate Approval API",
-                version = "1.0",
+                version = "${api.version}",
                 description = "API for managing corporate approvals, meetings, topics, participants, and voting"
         )
 )
