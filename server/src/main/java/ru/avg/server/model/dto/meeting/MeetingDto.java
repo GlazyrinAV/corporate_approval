@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 /**
  * Data Transfer Object representing a meeting in the approval system.
@@ -81,18 +82,71 @@ public class MeetingDto {
     private String type;
 
     /**
-     * The date when the meeting is scheduled or was held.
-     * This field captures the temporal aspect of the meeting and is essential for
-     * organizing and retrieving meetings chronologically.
-     * The date must not be null and is expected to be in ISO-8601 format (yyyy-MM-dd)
-     * when passed as a string in API requests.
+     * The date when the meeting is scheduled to occur.
+     * This field must not be null and represents the calendar date of the meeting.
+     * The date is formatted according to ISO-8601 standard (yyyy-MM-dd) during JSON
+     * serialization and deserialization.
      *
+     * @see LocalDate
+     * @see DateTimeFormat
      * @see jakarta.validation.constraints.NotNull
-     * @see org.springframework.format.annotation.DateTimeFormat
      */
     @NotNull(message = "Meeting date must not be null")
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    private LocalDate date;
+    private LocalDate dateOfMeeting;
+
+    /**
+     * The date when the meeting protocol is signed or approved.
+     * This field must not be null and typically occurs on or after the meeting date.
+     * Used for official documentation and regulatory compliance purposes.
+     */
+    @NotNull(message = "Date of protocol must not be null")
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    private LocalDate dateOfProtocol;
+
+    /**
+     * The start time of the participant registration period.
+     * This field indicates when participants can begin registering for the meeting.
+     * Must not be null and is formatted according to ISO-8601 time standard (HH:mm:ss).
+     */
+    @NotNull(message = "Start Time of registration must not be null")
+    @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+    private LocalTime starOfRegistration;
+
+    /**
+     * The end time of the participant registration period.
+     * This field indicates when registration closes before the meeting begins.
+     * Must not be null and should be before or equal to the meeting start time.
+     */
+    @NotNull(message = "End Time of registration must not be null")
+    @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+    private LocalTime endOfRegistration;
+
+    /**
+     * The scheduled start time of the meeting.
+     * This field represents when the meeting officially begins.
+     * Must not be null and is used for agenda planning and attendance tracking.
+     */
+    @NotNull(message = "Start Time of meeting must not be null")
+    @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+    private LocalTime startOfMeeting;
+
+    /**
+     * The scheduled end time of the meeting.
+     * This field represents when the meeting is expected to conclude.
+     * Must not be null and is used for room booking and scheduling purposes.
+     */
+    @NotNull(message = "End Time of meeting must not be null")
+    @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+    private LocalTime endOfMeeting;
+
+    /**
+     * The town or city where the meeting is held.
+     * This field is required and provides geographical context for the meeting location.
+     * Must not be blank.
+     */
+    @NotBlank(message = "Town must not be blank")
+    private String town;
 
     /**
      * The physical or virtual address where the meeting will be or was held.

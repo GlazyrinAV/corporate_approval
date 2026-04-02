@@ -102,13 +102,13 @@ public class NewMeetingMapper {
         // Resolve chairman if specified
         Participant chairman = dto.getChairmanId() != null
                 ? participantRepository.findById(dto.getChairmanId())
-                .orElseThrow(() -> new ParticipantNotFound(dto.getChairmanId()))
+                  .orElseThrow(() -> new ParticipantNotFound(dto.getChairmanId()))
                 : null;
 
         // Resolve secretary if specified
         Participant secretary = dto.getSecretaryId() != null
                 ? participantRepository.findById(dto.getSecretaryId())
-                .orElseThrow(() -> new ParticipantNotFound(dto.getSecretaryId()))
+                  .orElseThrow(() -> new ParticipantNotFound(dto.getSecretaryId()))
                 : null;
 
         // Map meeting type from string to enum
@@ -122,7 +122,13 @@ public class NewMeetingMapper {
                 .company(companyRepository.findById(dto.getCompanyId())
                         .orElseThrow(() -> new CompanyNotFound(dto.getCompanyId())))
                 .type(meetingType)
-                .date(dto.getDate())
+                .dateOfMeeting(dto.getDateOfMeeting())
+                .dateOfProtocol(dto.getDateOfProtocol())
+                .startOfMeeting(dto.getStartOfMeeting())
+                .endOfMeeting(dto.getEndOfMeeting())
+                .starOfRegistration(dto.getStarOfRegistration())
+                .endOfRegistration(dto.getEndOfRegistration())
+                .town(dto.getTown())
                 .address(dto.getAddress())
                 .chairman(chairman)
                 .secretary(secretary)

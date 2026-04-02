@@ -33,11 +33,11 @@ import java.util.stream.Collectors;
  * <p>The mapper is registered as a Spring component using {@link Component} and receives
  * its dependencies via constructor injection, enabled by {@link RequiredArgsConstructor}.</p>
  *
+ * @author AVG
  * @see NewParticipantDto
  * @see Participant
  * @see ParticipantType
  * @see CompanyRepository
- * @author AVG
  * @since 1.0
  */
 @Component
@@ -82,9 +82,8 @@ public class NewParticipantMapper {
      * @param newParticipantDto the DTO containing participant data, must not be {@code null}
      * @return a fully constructed {@link Participant} entity with mapped values
      * @throws IllegalArgumentException if {@code newParticipantDto} is {@code null}
-     * @throws ParticipantTypeNotFound if the {@code type} in the DTO does not correspond to any known participant type
-     * @throws CompanyNotFound if the {@code companyId} in the DTO does not correspond to any existing company
-     *
+     * @throws ParticipantTypeNotFound  if the {@code type} in the DTO does not correspond to any known participant type
+     * @throws CompanyNotFound          if the {@code companyId} in the DTO does not correspond to any existing company
      * @see ParticipantType
      * @see CompanyRepository#findById(Object)
      */
@@ -100,6 +99,11 @@ public class NewParticipantMapper {
 
         return Participant.builder()
                 .name(newParticipantDto.getName())
+                .dateOfBirth(newParticipantDto.getDateOfBirth())
+                .idDocument(newParticipantDto.getIdDocument())
+                .idDocumentData(newParticipantDto.getIdDocumentData())
+                .registrationAddress(newParticipantDto.getRegistrationAddress())
+                .nominalShare(newParticipantDto.getNominalShare())
                 .share(newParticipantDto.getShare())
                 .type(type)
                 .company(companyRepository.findById(newParticipantDto.getCompanyId())

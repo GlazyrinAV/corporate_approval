@@ -9,7 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * Main application class for the Corporate Approval System.
  * <p>
  * This class serves as the entry point for the Spring Boot application and configures
- * the overall application context. It enables component scanning, auto-configuration,
+ * the overall application context. It enables component scanning, autoconfiguration,
  * and other Spring Boot features through the {@link SpringBootApplication} annotation.
  * </p>
  * <p>

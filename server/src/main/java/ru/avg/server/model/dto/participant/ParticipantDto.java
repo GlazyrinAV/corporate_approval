@@ -1,13 +1,12 @@
 package ru.avg.server.model.dto.participant;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
 
 /**
  * Data Transfer Object (DTO) representing a participant for transfer between application layers, particularly through the API.
@@ -20,6 +19,9 @@ import lombok.NoArgsConstructor;
  *   <li>{@link #companyId} must not be {@code null}, ensuring every participant is associated with a company.</li>
  *   <li>{@link #type} must correspond to an existing {@link ru.avg.server.model.participant.ParticipantType} and cannot be blank.</li>
  *   <li>{@link #isActive} must be explicitly set to {@code true} or {@code false}; null values are not allowed.</li>
+ *   <li>{@link #dateOfBirth} must not be {@code null}.</li>
+ *   <li>{@link #idDocument} and {@link #idDocumentData} must not be blank.</li>
+ *   <li>{@link #registrationAddress} must not be blank.</li>
  * </ul>
  *
  * <p>The class uses Lombok annotations to reduce boilerplate code:
@@ -53,6 +55,43 @@ public class ParticipantDto {
      */
     @NotBlank(message = "Participant name must not be blank")
     private String name;
+
+    /**
+     * Date of birth of the participant.
+     * Must not be {@code null}. Used for identity verification and compliance.
+     */
+    @NotNull(message = "Date of birth must not be null")
+    private LocalDate dateOfBirth;
+
+    /**
+     * Type of identification document (e.g., Passport, ID Card).
+     * Must not be {@code null} or blank.
+     */
+    @NotBlank(message = "ID document type must not be blank")
+    private String idDocument;
+
+    /**
+     * Document number or identifier (e.g., passport number).
+     * Must not be blank. This field should contain only alphanumeric characters as per format rules.
+     */
+    @NotBlank(message = "ID document data must not be blank")
+    @Pattern(regexp = "[A-Z]{2}\\d{7}", message = "Invalid passport format")
+    private String idDocumentData;
+
+    /**
+     * Official registration address of the participant.
+     * Must not be blank. Required for legal and regulatory compliance.
+     */
+    @NotBlank(message = "Registration address must not be blank")
+    private String registrationAddress;
+
+    /**
+     * Nominal share held by the participant in the company (not percentage).
+     * Must not be {@code null} and must be at least 0.
+     */
+    @NotNull(message = "Nominal share must not be null")
+    @Min(value = 0, message = "Nominal share must be at least 0")
+    private Double nominalShare;
 
     /**
      * Ownership share or percentage held by the participant in the company.

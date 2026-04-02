@@ -118,7 +118,15 @@ create table voter
 );
 
 insert into company
-values (DEFAULT, 'Company 1', 7810101010, 1234567890, 'LLC', false);
+values (DEFAULT, 'Ромашка', 7810101010, 1234567890, 'LLC', false);
+insert into company
+values (DEFAULT, 'Рога', 7810101011, 1234567891, 'JSC', true);
+insert into company
+values (DEFAULT, 'Копыта', 7810101012, 1234567892, 'LLC', false);
+insert into company
+values (DEFAULT, 'Нефте', 7810101013, 1234567893, 'LLC', false);
+insert into company
+values (DEFAULT, 'Газ', 7810101014, 1234567894, 'LLC', false);
 insert into participant
 values (DEFAULT, 'Alex', '1964-01-01'::date, 'passport', 'data of passport', 'SPB',
         100, 20, 1, 'OWNER', true);
