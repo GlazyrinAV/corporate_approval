@@ -127,6 +127,7 @@ public class CompanyServiceImpl implements CompanyService {
         Company updateSource = newCompanyMapper.fromDto(updatedCompanyDto);
 
         Company updatedCompany = updater.update(existingCompany, updateSource);
+        storage.save(updatedCompany);
         return companyMapper.toDto(updatedCompany);
     }
 
