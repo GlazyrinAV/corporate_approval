@@ -63,7 +63,7 @@ public class CompanyDto {
      * The format is strictly numeric and must pass checksum validation defined by Russian tax regulations.
      */
     @Inn
-    private Long inn;
+    private String inn;
 
     /**
      * Main State Registration Number (OGRN) — a 13-digit identifier assigned to a company upon state registration.
@@ -72,7 +72,7 @@ public class CompanyDto {
      * It is used for legal and governmental identification purposes.
      */
     @Ogrn
-    private Long registrationNumber;
+    private String registrationNumber;
 
     /**
      * Type of the company (e.g., LLC, JSC) represented as a string corresponding to the {@link ru.avg.server.model.company.CompanyType} enum.

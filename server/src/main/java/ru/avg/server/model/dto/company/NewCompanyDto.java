@@ -56,7 +56,7 @@ public class NewCompanyDto {
      * The value is checked for correct length and checksum during validation.
      */
     @Inn
-    private Long inn;
+    private String inn;
 
     /**
      * Main State Registration Number (OGRN) — a 13-digit identifier assigned to the company upon state registration.
@@ -64,7 +64,7 @@ public class NewCompanyDto {
      * This field is required and ensures legal traceability of the entity.
      */
     @Ogrn
-    private Long registrationNumber;
+    private String registrationNumber;
 
     /**
      * Type of the company (e.g., LLC, JSC) represented as a string.

@@ -73,14 +73,14 @@ public class Company {
      * assigned to the company. Must be unique across all records in the system.
      */
     @Column(name = "inn", nullable = false, unique = true)
-    private Long inn;
+    private String inn;
 
     /**
      * Official state registration number assigned to the company upon incorporation.
      * Used for legal and governmental identification; must not be null and must be unique.
      */
     @Column(name = "registration_number", nullable = false, unique = true)
-    private Long registrationNumber;
+    private String registrationNumber;
 
     /**
      * Type of the company (e.g., LLC, JSC) represented as an enum.

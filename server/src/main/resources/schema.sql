@@ -7,8 +7,8 @@ create table public.company
         constraint company_pk
             primary key,
     title                  varchar               not null,
-    inn                    bigint                not null unique,
-    registration_number    bigint                not null unique,
+    inn                    varchar(10)           not null unique,
+    registration_number    varchar(13)           not null unique,
     company_type           varchar               not null
         constraint check_name
             check (company.company_type in ('LLC', 'JSC')),
