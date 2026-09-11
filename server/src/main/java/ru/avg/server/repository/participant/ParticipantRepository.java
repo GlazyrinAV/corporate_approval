@@ -118,7 +118,7 @@ public interface ParticipantRepository extends JpaRepository<Participant, Intege
      * @see Pageable
      * @see Participant
      */
-    @Query("SELECT Participant AS P FROM Participant WHERE (P.company.id = :companyId) AND " +
+    @Query("SELECT P FROM Participant AS P WHERE (P.company.id = :companyId) AND " +
             "(lower(P.name) like lower(concat('%', :criteria, '%'))) ORDER BY P.name")
     Page<Participant> findByCriteria(@Param("companyId") Integer companyId,
                                      @Param("criteria") String criteria,

@@ -118,7 +118,7 @@ public class Participant {
      * Establishes a many-to-one relationship with the {@link Company} entity.
      * Cannot be null — every participant must be associated with a company.
      */
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 

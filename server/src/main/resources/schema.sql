@@ -127,6 +127,22 @@ insert into company
 values (DEFAULT, 'Нефте', 7810101013, 1234567893444, 'LLC', false);
 insert into company
 values (DEFAULT, 'Газ', 7810101014, 1234567894555, 'LLC', false);
+insert into company
+values (DEFAULT, 'Газ2', 7810101015, 1234567894556, 'LLC', false);
+insert into company
+values (DEFAULT, 'Газ3', 7810101016, 1234567894557, 'LLC', false);
+insert into company
+values (DEFAULT, 'Газ4', 7810101017, 1234567894558, 'LLC', false);
+insert into company
+values (DEFAULT, 'Газ5', 7810101018, 1234567894559, 'LLC', false);
+insert into company
+values (DEFAULT, 'Газ6', 7810101019, 1234567894515, 'LLC', false);
+insert into company
+values (DEFAULT, 'Газ7', 7810101020, 1234567894525, 'LLC', false);
+insert into company
+values (DEFAULT, 'Газ8', 7810101021, 1234567894535, 'LLC', false);
+insert into company
+values (DEFAULT, 'Газ9', 7810101022, 1234567894545, 'LLC', false);
 insert into participant
 values (DEFAULT, 'Alex', '1964-01-01'::date, 'passport', 'data of passport', 'SPB',
         100, 20, 1, 'OWNER', true);

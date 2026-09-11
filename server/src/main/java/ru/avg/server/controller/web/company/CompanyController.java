@@ -121,7 +121,7 @@ public class CompanyController {
     @GetMapping
     public ResponseEntity<Page<CompanyDto>> findAll(
             @RequestParam(defaultValue = "0") @Min(0) Integer page,
-            @RequestParam(defaultValue = "10") @Min(1) @Max(50) Integer limit) {
+            @RequestParam(defaultValue = "8") @Min(1) @Max(50) Integer limit) {
         log.debug("Fetching companies - page: {}, limit: {}", page, limit);
         Page<CompanyDto> companies = companyService.findAll(page, limit);
         return ResponseEntity.ok(companies);
@@ -164,7 +164,7 @@ public class CompanyController {
     public ResponseEntity<Page<CompanyDto>> findByCriteria(
             @RequestParam(required = false, defaultValue = "") @Size(max = 100) String criteria,
             @RequestParam(defaultValue = "0") @Min(0) Integer page,
-            @RequestParam(defaultValue = "10") @Min(1) @Max(50) Integer limit) {
+            @RequestParam(defaultValue = "8") @Min(1) @Max(50) Integer limit) {
         log.debug("Finding companies by criteria with pagination(page: {}, limit: {}): {}", page, limit, criteria);
         Page<CompanyDto> companies = companyService.findByCriteria(criteria, page, limit);
         return ResponseEntity.ok(companies);

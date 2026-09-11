@@ -40,6 +40,6 @@ public interface VotingRepository extends JpaRepository<Voting, Integer> {
      * @return the number of deleted entities (0 or 1)
      */
     @Modifying
-    @Query("DELETE FROM Voting v WHERE v.topic.id = :topicId")
+    @Query("DELETE FROM Voting AS v WHERE v.topic.id = :topicId")
     int deleteByTopicId(@Param("topicId") Integer topicId);
 }

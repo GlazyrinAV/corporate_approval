@@ -67,7 +67,7 @@ public interface MeetingRepository extends JpaRepository<Meeting, Integer> {
      * @return the number of matching meetings
      * @since 1.0
      */
-    @Query("SELECT COUNT(m) FROM Meeting m WHERE m.type = :type AND m.date BETWEEN :startDate AND :endDate")
+    @Query("SELECT COUNT(m) FROM Meeting AS m WHERE m.type = :type AND m.date BETWEEN :startDate AND :endDate")
     long countByTypeAndDateBetween(
             @Param("type") MeetingType type,
             @Param("startDate") LocalDate startDate,
@@ -82,7 +82,7 @@ public interface MeetingRepository extends JpaRepository<Meeting, Integer> {
      * @return an {@link Optional} containing the most recent meeting, or empty if not found
      * @since 1.0
      */
-    @Query("SELECT m FROM Meeting m WHERE m.company.id = :companyId AND m.type = :type ORDER BY m.date DESC")
+    @Query("SELECT m FROM Meeting AS m WHERE m.company.id = :companyId AND m.type = :type ORDER BY m.date DESC")
     Optional<Meeting> findFirstByCompanyIdAndTypeOrderByDateDesc(
             @Param("companyId") Integer companyId,
             @Param("type") MeetingType type
