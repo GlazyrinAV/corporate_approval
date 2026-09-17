@@ -74,7 +74,7 @@ public class MeetingParticipant {
      * @see Participant
      * @see JoinColumn
      */
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "participant_id", nullable = false)
     private Participant participant;
 

@@ -149,6 +149,35 @@ values (DEFAULT, 'Alex', '1964-01-01'::date, 'passport', 'data of passport', 'SP
 insert into participant
 values (DEFAULT, 'Jack', '1964-01-01'::date, 'passport', 'data of passport', 'SPB',
         100, 20, 1, 'OWNER', true);
+
+insert into participant
+values (DEFAULT, 'Alex2', '1964-01-01'::date, 'passport', 'data of passport', 'SPB',
+        100, 20, 1, 'OWNER', true);
+insert into participant
+values (DEFAULT, 'Alex3', '1964-01-01'::date, 'passport', 'data of passport', 'SPB',
+        100, 20, 1, 'OWNER', true);
+insert into participant
+values (DEFAULT, 'Alex4', '1964-01-01'::date, 'passport', 'data of passport', 'SPB',
+        100, 20, 1, 'OWNER', true);
+insert into participant
+values (DEFAULT, 'Alex4', '1964-01-01'::date, 'passport', 'data of passport', 'SPB',
+        100, 20, 1, 'OWNER', true);
+insert into participant
+values (DEFAULT, 'Alex4', '1964-01-01'::date, 'passport', 'data of passport', 'SPB',
+        100, 20, 1, 'OWNER', true);
+insert into participant
+values (DEFAULT, 'Alex4', '1964-01-01'::date, 'passport', 'data of passport', 'SPB',
+        100, 20, 1, 'OWNER', true);
+insert into participant
+values (DEFAULT, 'Alex4', '1964-01-01'::date, 'passport', 'data of passport', 'SPB',
+        100, 20, 1, 'OWNER', true);
+insert into participant
+values (DEFAULT, 'Alex4', '1964-01-01'::date, 'passport', 'data of passport', 'SPB',
+        100, 20, 1, 'OWNER', true);
+insert into participant
+values (DEFAULT, 'Alex4', '1964-01-01'::date, 'passport', 'data of passport', 'SPB',
+        100, 20, 1, 'OWNER', true);
+
 insert into meeting
 values (DEFAULT, 1, 'FMP', '11.11.11', '11.11.11',
         '19:06+03', '20:06 +03', '20:07 +03', '21:07 +03',

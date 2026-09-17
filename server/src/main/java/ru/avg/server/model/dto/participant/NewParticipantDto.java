@@ -1,6 +1,9 @@
 package ru.avg.server.model.dto.participant;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -67,7 +70,6 @@ public class NewParticipantDto {
      * Must not be blank. This field should contain only alphanumeric characters as per format rules.
      */
     @NotBlank(message = "ID document data must not be blank")
-    @Pattern(regexp = "[A-Z]{2}\\d{7}", message = "Invalid passport format")
     private String idDocumentData;
 
     /**
