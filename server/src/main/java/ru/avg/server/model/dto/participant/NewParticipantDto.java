@@ -21,7 +21,7 @@ import java.time.LocalDate;
  *   <li>{@link #name} must not be {@code null} or blank.</li>
  *   <li>{@link #share} must be between 0 and 100 (inclusive) and cannot be {@code null}.</li>
  *   <li>{@link #companyId} must not be {@code null}, ensuring every participant is associated with a company.</li>
- *   <li>{@link #type} must correspond to an existing {@link ru.avg.server.model.participant.ParticipantType} and cannot be blank.</li>
+ *   <li>{@link #participantType} must correspond to an existing {@link ru.avg.server.model.participant.ParticipantType} and cannot be blank.</li>
  *   <li>{@link #isActive} must be explicitly set to {@code true} or {@code false}; null values are not allowed.</li>
  * </ul>
  *
@@ -109,7 +109,7 @@ public class NewParticipantDto {
      * Cannot be {@code null} or blank.
      */
     @NotBlank(message = "Participant type must not be blank")
-    private String type;
+    private String participantType;
 
     /**
      * Indicates whether the participant is currently active in the company’s operations.

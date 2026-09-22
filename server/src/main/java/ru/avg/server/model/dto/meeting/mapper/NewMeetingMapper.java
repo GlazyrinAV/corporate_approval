@@ -112,9 +112,9 @@ public class NewMeetingMapper {
                 : null;
 
         // Map meeting type from string to enum
-        MeetingType meetingType = MEETING_TYPE_MAP.get(dto.getType());
+        MeetingType meetingType = MEETING_TYPE_MAP.get(dto.getMeetingType());
         if (meetingType == null) {
-            throw new MeetingTypeNotFound(dto.getType());
+            throw new MeetingTypeNotFound(dto.getMeetingType());
         }
 
         // Build and return the entity

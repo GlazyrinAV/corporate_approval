@@ -72,7 +72,7 @@ public class NewMeetingDto {
      * @see ru.avg.server.model.meeting.MeetingType
      */
     @NotBlank(message = "Meeting type must not be blank")
-    private String type;
+    private String meetingType;
 
     /**
      * The date when the meeting is scheduled to occur.

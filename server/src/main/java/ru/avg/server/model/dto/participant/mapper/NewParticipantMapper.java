@@ -92,9 +92,9 @@ public class NewParticipantMapper {
             throw new IllegalArgumentException("NewParticipantDto must not be null");
         }
 
-        ParticipantType type = PARTICIPANT_TYPE_MAP.get(newParticipantDto.getType());
+        ParticipantType type = PARTICIPANT_TYPE_MAP.get(newParticipantDto.getParticipantType());
         if (type == null) {
-            throw new ParticipantTypeNotFound(newParticipantDto.getType());
+            throw new ParticipantTypeNotFound(newParticipantDto.getParticipantType());
         }
 
         return Participant.builder()

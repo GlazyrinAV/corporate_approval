@@ -88,9 +88,9 @@ public class ParticipantMapper {
             throw new IllegalArgumentException("ParticipantDto must not be null");
         }
 
-        ParticipantType type = PARTICIPANT_TYPE_MAP.get(participantDto.getType());
+        ParticipantType type = PARTICIPANT_TYPE_MAP.get(participantDto.getParticipantType());
         if (type == null) {
-            throw new ParticipantTypeNotFound(participantDto.getType());
+            throw new ParticipantTypeNotFound(participantDto.getParticipantType());
         }
 
         return Participant.builder()
@@ -149,7 +149,7 @@ public class ParticipantMapper {
                 .nominalShare(participant.getNominalShare())
                 .share(participant.getShare())
                 .companyId(participant.getCompany().getId())
-                .type(participant.getType().getTitle())
+                .participantType(participant.getType().getTitle())
                 .isActive(participant.getIsActive())
                 .build();
     }

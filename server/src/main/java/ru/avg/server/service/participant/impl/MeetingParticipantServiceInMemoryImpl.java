@@ -160,9 +160,9 @@ public class MeetingParticipantServiceInMemoryImpl implements MeetingParticipant
 
         // Find meeting type
         MeetingType meetingType = Arrays.stream(MeetingType.values())
-                .filter(mt -> mt.getTitle().equals(meetingDto.getType()))
+                .filter(mt -> mt.getTitle().equals(meetingDto.getMeetingType()))
                 .findFirst()
-                .orElseThrow(() -> new MeetingTypeNotFound(meetingDto.getType()));
+                .orElseThrow(() -> new MeetingTypeNotFound(meetingDto.getMeetingType()));
 
         // Get potential participants and filter out those already in the meeting
         return participantService.findAllByMeetingType(meetingDto.getCompanyId(), meetingType)

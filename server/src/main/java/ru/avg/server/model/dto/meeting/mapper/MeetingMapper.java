@@ -103,9 +103,9 @@ public class MeetingMapper {
             throw new IllegalArgumentException("MeetingDto must not be null");
         }
 
-        MeetingType type = MEETING_TYPE_MAP.get(dto.getType());
+        MeetingType type = MEETING_TYPE_MAP.get(dto.getMeetingType());
         if (type == null) {
-            throw new MeetingTypeNotFound(dto.getType());
+            throw new MeetingTypeNotFound(dto.getMeetingType());
         }
 
         return Meeting.builder()
@@ -164,7 +164,7 @@ public class MeetingMapper {
         return MeetingDto.builder()
                 .id(meeting.getId())
                 .companyId(meeting.getCompany().getId())
-                .type(meeting.getType().getTitle())
+                .meetingType(meeting.getType().getTitle())
                 .dateOfMeeting(meeting.getDateOfMeeting())
                 .dateOfProtocol(meeting.getDateOfProtocol())
                 .startOfMeeting(meeting.getStartOfMeeting())
