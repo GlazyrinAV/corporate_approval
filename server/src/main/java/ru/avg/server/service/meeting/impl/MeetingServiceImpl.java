@@ -231,12 +231,12 @@ public class MeetingServiceImpl implements MeetingService {
      * @return a MeetingDto representing the found meeting
      * @throws MeetingNotFound if no meeting matches the given criteria
      * @throws CompanyNotFound if the specified company does not exist
-     * @see MeetingRepository#findByCompanyIdAndTypeAndDate(Integer, MeetingType, LocalDate)
+     * @see MeetingRepository#findByCompanyIdAndTypeAndDateOfMeeting(Integer, MeetingType, LocalDate)
      */
     @Override
     public MeetingDto find(Integer companyId, MeetingType type, LocalDate date) {
         verifier.verifyCompanyAndMeeting(companyId, null);
-        return meetingRepository.findByCompanyIdAndTypeAndDate(companyId, type, date)
+        return meetingRepository.findByCompanyIdAndTypeAndDateOfMeeting(companyId, type, date)
                 .map(meetingMapper::toDto)
                 .orElseThrow(() -> new MeetingNotFound(companyId, date));
     }
@@ -286,7 +286,7 @@ public class MeetingServiceImpl implements MeetingService {
      * sorted by meeting date in descending order (newest first); never {@code null}
      * @throws IllegalArgumentException if {@code page} is negative or {@code limit} is not in the range [1, 20]
      * @throws RuntimeException         if the company verification fails (e.g., company does not exist or access is denied)
-     * @see MeetingRepository#findByCompanyIdOrderByDateDesc(Integer, Pageable)
+     * @see MeetingRepository#findByCompanyIdOrderByDateOfMeetingDesc(Integer, Pageable)
      * @see MeetingMapper#toDto(Meeting)
      * @see Page
      * @see PageRequest
@@ -299,7 +299,7 @@ public class MeetingServiceImpl implements MeetingService {
 
         Pageable pageable = PageRequest.of(page, limit);
 
-        return meetingRepository.findByCompanyIdOrderByDateDesc(companyId, pageable)
+        return meetingRepository.findByCompanyIdOrderByDateOfMeetingDesc(companyId, pageable)
                 .map(meetingMapper::toDto);
     }
 }

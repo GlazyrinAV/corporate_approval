@@ -29,11 +29,11 @@ public interface MeetingRepository extends JpaRepository<Meeting, Integer> {
      *
      * @param companyId the ID of the company organizing the meeting; must not be null
      * @param type      the type of the meeting (e.g., Annual, Extraordinary); must not be null
-     * @param date      the date when the meeting takes place; must not be null
+     * @param dateOfMeeting      the date when the meeting takes place; must not be null
      * @return an {@link Optional} containing the found meeting, or empty if not found
      * @since 1.0
      */
-    Optional<Meeting> findByCompanyIdAndTypeAndDate(Integer companyId, MeetingType type, LocalDate date);
+    Optional<Meeting> findByCompanyIdAndTypeAndDateOfMeeting(Integer companyId, MeetingType type, LocalDate dateOfMeeting);
 
     /**
      * Retrieves a paginated list of meetings associated with a specific company,
@@ -56,7 +56,7 @@ public interface MeetingRepository extends JpaRepository<Meeting, Integer> {
      * @see Pageable
      * @see org.springframework.data.jpa.repository.JpaRepository
      */
-    Page<Meeting> findByCompanyIdOrderByDateDesc(Integer companyId, Pageable pageable);
+    Page<Meeting> findByCompanyIdOrderByDateOfMeetingDesc(Integer companyId, Pageable pageable);
 
     /**
      * Counts the number of meetings of a specific type within a given date range.
@@ -67,8 +67,8 @@ public interface MeetingRepository extends JpaRepository<Meeting, Integer> {
      * @return the number of matching meetings
      * @since 1.0
      */
-    @Query("SELECT COUNT(m) FROM Meeting AS m WHERE m.type = :type AND m.date BETWEEN :startDate AND :endDate")
-    long countByTypeAndDateBetween(
+    @Query("SELECT COUNT(m) FROM Meeting AS m WHERE m.type = :type AND m.dateOfMeeting BETWEEN :startDate AND :endDate")
+    long countByTypeAndDateOfMeetingBetween(
             @Param("type") MeetingType type,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
@@ -82,8 +82,8 @@ public interface MeetingRepository extends JpaRepository<Meeting, Integer> {
      * @return an {@link Optional} containing the most recent meeting, or empty if not found
      * @since 1.0
      */
-    @Query("SELECT m FROM Meeting AS m WHERE m.company.id = :companyId AND m.type = :type ORDER BY m.date DESC")
-    Optional<Meeting> findFirstByCompanyIdAndTypeOrderByDateDesc(
+    @Query("SELECT m FROM Meeting AS m WHERE m.company.id = :companyId AND m.type = :type ORDER BY m.dateOfMeeting DESC")
+    Optional<Meeting> findFirstByCompanyIdAndTypeOrderByDateOfMeetingDesc(
             @Param("companyId") Integer companyId,
             @Param("type") MeetingType type
     );

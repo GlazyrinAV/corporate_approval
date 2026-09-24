@@ -111,7 +111,7 @@ public class MeetingDto {
      */
     @NotNull(message = "Start Time of registration must not be null")
     @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
-    private LocalTime starOfRegistration;
+    private LocalTime startOfRegistration;
 
     /**
      * The end time of the participant registration period.

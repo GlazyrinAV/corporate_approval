@@ -105,7 +105,7 @@ public class Meeting {
      * Cannot be null — registration start time must be defined.
      */
     @Column(name = "start_of_registration", nullable = false)
-    private LocalTime starOfRegistration;
+    private LocalTime startOfRegistration;
 
     /**
      * The time when participant registration ends for the meeting.
