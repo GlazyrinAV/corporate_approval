@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -46,5 +45,5 @@ public class NewMeetingParticipantDto {
      */
     @Valid
     @NotNull(message = "List of potential participants must not be null")
-    private List<@Valid MeetingParticipantDto> potentialParticipants = new ArrayList<>();
+    private List<@Valid MeetingParticipantDto> potentialParticipants;
 }

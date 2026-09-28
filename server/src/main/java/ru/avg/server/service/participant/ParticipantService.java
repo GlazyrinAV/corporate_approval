@@ -114,7 +114,7 @@ public interface ParticipantService {
      * @return a list of ParticipantDto objects matching the eligibility criteria; never null but may be empty
      * @throws ru.avg.server.exception.company.CompanyNotFound if the specified company does not exist
      */
-    List<ParticipantDto> findAllByMeetingType(Integer companyId, MeetingType type);
+    List<ParticipantDto> findAllByMeetingType(Integer companyId, MeetingType type );
 
     /**
      * Retrieves all participants associated with a specific company.

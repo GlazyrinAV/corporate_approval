@@ -3,14 +3,15 @@ package ru.avg.server.controller.web.meeting;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.avg.server.model.dto.participant.MeetingParticipantDto;
-import ru.avg.server.model.dto.participant.NewMeetingParticipantDto;
 import ru.avg.server.service.participant.MeetingParticipantService;
 
 import java.util.List;
@@ -70,11 +71,13 @@ public class MeetingParticipantController {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved list of potential participants")
     })
     @GetMapping("/potentials")
-    public ResponseEntity<List<MeetingParticipantDto>> findPotentialParticipants(
+    public ResponseEntity<Page<MeetingParticipantDto>> findPotentialParticipants(
             @PathVariable Integer companyId,
-            @PathVariable Integer meetingId) {
+            @PathVariable Integer meetingId,
+            @RequestParam(defaultValue = "0") @Min(0) Integer page,
+            @RequestParam(defaultValue = "8") @Min(1) @Max(50) Integer limit) {
         log.debug("Fetching potential participants for meeting: {}", meetingId);
-        List<MeetingParticipantDto> potentialParticipants = meetingParticipantService.findPotential(companyId, meetingId);
+        Page<MeetingParticipantDto> potentialParticipants = meetingParticipantService.findPotential(companyId, meetingId, page, limit);
         return ResponseEntity.ok(potentialParticipants);
     }
 
@@ -93,11 +96,13 @@ public class MeetingParticipantController {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved list of participants")
     })
     @GetMapping
-    public ResponseEntity<List<MeetingParticipantDto>> findParticipants(
+    public ResponseEntity<Page<MeetingParticipantDto>> findParticipants(
             @PathVariable Integer companyId,
-            @PathVariable Integer meetingId) {
+            @PathVariable Integer meetingId,
+            @RequestParam(defaultValue = "0") @Min(0) Integer page,
+            @RequestParam(defaultValue = "8") @Min(1) @Max(50) Integer limit) {
         log.debug("Fetching participants for meetingId: {}", meetingId);
-        List<MeetingParticipantDto> participants = meetingParticipantService.findAll(companyId, meetingId);
+        Page<MeetingParticipantDto> participants = meetingParticipantService.findAll(companyId, meetingId, page, limit);
         return ResponseEntity.ok(participants);
     }
 
@@ -152,9 +157,9 @@ public class MeetingParticipantController {
     public ResponseEntity<List<MeetingParticipantDto>> saveMeetingParticipant(
             @PathVariable Integer companyId,
             @PathVariable Integer meetingId,
-            @RequestBody @Valid NewMeetingParticipantDto creationDto) {
+            @RequestBody List<MeetingParticipantDto> creationDto) {
         log.debug("Adding participants to meeting: {} with data: {}", meetingId, creationDto);
-        List<MeetingParticipantDto> participants = meetingParticipantService.save(companyId, meetingId, creationDto.getPotentialParticipants());
+        List<MeetingParticipantDto> participants = meetingParticipantService.save(companyId, meetingId, creationDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(participants);
     }
 

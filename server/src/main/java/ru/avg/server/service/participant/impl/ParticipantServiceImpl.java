@@ -212,8 +212,8 @@ public class ParticipantServiceImpl implements ParticipantService {
         boolean hasActiveMeetings = meetingParticipantRepository.findByParticipantId(participantId).stream()
                 .map(meetingParticipantMapper::toDto)
                 .anyMatch(meetingParticipantDto -> {
-                            Participant participant = participantRepository.findById(meetingParticipantDto.getParticipantId())
-                                    .orElseThrow(() -> new ParticipantNotFound(meetingParticipantDto.getParticipantId()));
+                            Participant participant = participantRepository.findById(meetingParticipantDto.getParticipant().getId())
+                                    .orElseThrow(() -> new ParticipantNotFound(meetingParticipantDto.getParticipant().getId()));
 
                             return Boolean.TRUE.equals(participant.getIsActive());
                         }

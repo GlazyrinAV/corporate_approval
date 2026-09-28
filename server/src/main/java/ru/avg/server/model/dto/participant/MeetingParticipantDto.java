@@ -2,8 +2,11 @@ package ru.avg.server.model.dto.participant;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import tools.jackson.databind.annotation.JsonDeserialize;
 
 /**
  * Data Transfer Object representing the association between a participant and a meeting.
@@ -30,6 +33,8 @@ import lombok.Data;
  */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class MeetingParticipantDto {
 
     /**
@@ -82,7 +87,8 @@ public class MeetingParticipantDto {
      */
     @Valid
     @NotNull(message = "Participant must not be null")
-    private Integer participantId;
+    @JsonDeserialize(as = ParticipantDto.class)
+    private ParticipantDto participant;
 
     /**
      * The attendance status of the participant in the meeting.

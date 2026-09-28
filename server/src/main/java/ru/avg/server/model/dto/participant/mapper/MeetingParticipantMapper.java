@@ -56,6 +56,8 @@ public class MeetingParticipantMapper {
      */
     private final ParticipantRepository participantRepository;
 
+    private final ParticipantMapper participantMapper;
+
     /**
      * Converts a {@link MeetingParticipantDto} object into a {@link MeetingParticipant} entity.
      * <p>
@@ -96,8 +98,8 @@ public class MeetingParticipantMapper {
                 .isPresent(dto.getIsPresent())
                 .meeting(meetingRepository.findById(dto.getMeetingId())
                         .orElseThrow(() -> new MeetingNotFound(dto.getMeetingId())))
-                .participant(participantRepository.findById(dto.getParticipantId())
-                        .orElseThrow(() -> new ParticipantNotFound(dto.getParticipantId())))
+                .participant(participantRepository.findById(dto.getParticipant().getId())
+                        .orElseThrow(() -> new ParticipantNotFound(dto.getParticipant().getId())))
                 .build();
     }
 
@@ -131,7 +133,7 @@ public class MeetingParticipantMapper {
                 .id(participant.getId())
                 .meetingId(participant.getMeeting() != null ? participant.getMeeting().getId() : null)
                 .isPresent(participant.isPresent())
-                .participantId(participant.getId())
+                .participant(participantMapper.toDto(participant.getParticipant()))
                 .build();
     }
 
@@ -161,7 +163,7 @@ public class MeetingParticipantMapper {
         }
 
         return MeetingParticipantDto.builder()
-                .participantId(participant.getId())
+                .participant(participant)
                 .isPresent(false)
                 .build();
     }
