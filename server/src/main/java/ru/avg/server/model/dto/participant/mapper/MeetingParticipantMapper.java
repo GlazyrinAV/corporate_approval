@@ -103,6 +103,23 @@ public class MeetingParticipantMapper {
                 .build();
     }
 
+    public MeetingParticipant fromNewDto(MeetingParticipantDto dto) {
+        if (dto == null) {
+            throw new IllegalArgumentException("DTO must not be null");
+        }
+        if (dto.getIsPresent() == null) {
+            dto.setIsPresent(false);
+        }
+
+        return MeetingParticipant.builder()
+                .isPresent(dto.getIsPresent())
+                .meeting(meetingRepository.findById(dto.getMeetingId())
+                        .orElseThrow(() -> new MeetingNotFound(dto.getMeetingId())))
+                .participant(participantRepository.findById(dto.getParticipant().getId())
+                        .orElseThrow(() -> new ParticipantNotFound(dto.getParticipant().getId())))
+                .build();
+    }
+
     /**
      * Converts a {@link MeetingParticipant} entity into a {@link MeetingParticipantDto} object.
      * <p>

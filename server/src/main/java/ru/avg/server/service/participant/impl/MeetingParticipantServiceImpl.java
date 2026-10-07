@@ -108,7 +108,7 @@ public class MeetingParticipantServiceImpl implements MeetingParticipantService 
         for (MeetingParticipantDto participant : participants) {
             if (meetingParticipantRepository.findByMeetingIdAndParticipantId(meetingId, participant.getParticipant().getId())
                     .isEmpty()) {
-                MeetingParticipant meetingParticipant = meetingParticipantRepository.save(meetingParticipantMapper.fromDto(participant));
+                MeetingParticipant meetingParticipant = meetingParticipantRepository.save(meetingParticipantMapper.fromNewDto(participant));
                 List<TopicDto> topics = topicRepository.findAllByMeetingId(meetingParticipant.getMeeting().getId())
                         .stream()
                         .map(topicMapper::toDto)
