@@ -126,7 +126,7 @@ public class NewMeetingMapper {
                 .dateOfProtocol(dto.getDateOfProtocol())
                 .startOfMeeting(dto.getStartOfMeeting())
                 .endOfMeeting(dto.getEndOfMeeting())
-                .startOfRegistration(dto.getStarOfRegistration())
+                .startOfRegistration(dto.getStartOfRegistration())
                 .endOfRegistration(dto.getEndOfRegistration())
                 .town(dto.getTown())
                 .address(dto.getAddress())

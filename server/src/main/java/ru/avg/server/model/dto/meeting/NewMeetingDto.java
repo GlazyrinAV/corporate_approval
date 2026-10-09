@@ -1,5 +1,6 @@
 package ru.avg.server.model.dto.meeting;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -104,7 +105,8 @@ public class NewMeetingDto {
      */
     @NotNull(message = "Start Time of registration must not be null")
     @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
-    private LocalTime starOfRegistration;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+    private LocalTime startOfRegistration;
 
     /**
      * The end time of the participant registration period.
@@ -113,6 +115,7 @@ public class NewMeetingDto {
      */
     @NotNull(message = "End Time of registration must not be null")
     @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     private LocalTime endOfRegistration;
 
     /**
@@ -122,6 +125,7 @@ public class NewMeetingDto {
      */
     @NotNull(message = "Start Time of meeting must not be null")
     @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     private LocalTime startOfMeeting;
 
     /**
@@ -131,6 +135,7 @@ public class NewMeetingDto {
      */
     @NotNull(message = "End Time of meeting must not be null")
     @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     private LocalTime endOfMeeting;
 
     /**
