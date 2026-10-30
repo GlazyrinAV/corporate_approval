@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.avg.server.model.dto.participant.NewParticipantDto;
 import ru.avg.server.model.dto.participant.ParticipantDto;
+import ru.avg.server.mservice.participant.ParticipantMService;
 import ru.avg.server.service.participant.ParticipantService;
 
 /**
@@ -50,6 +51,8 @@ public class ParticipantController {
      * @see ParticipantService
      */
     private final ParticipantService participantService;
+
+    private final ParticipantMService participantMService;
 
     /**
      * Retrieves a paginated list of all participants belonging to a specific company.
@@ -154,7 +157,7 @@ public class ParticipantController {
     public ResponseEntity<ParticipantDto> update(
             @PathVariable Integer companyId,
             @PathVariable Integer participantId,
-            @Valid @RequestBody NewParticipantDto newParticipantDto) {
+            @Valid @RequestBody ParticipantDto newParticipantDto) {
         log.info("Request to update participant id={} for companyId={}: {}", participantId, companyId, newParticipantDto);
         ParticipantDto updatedParticipant = participantService.update(companyId, participantId, newParticipantDto);
         return ResponseEntity.ok(updatedParticipant);
@@ -179,7 +182,7 @@ public class ParticipantController {
             @PathVariable Integer companyId,
             @PathVariable Integer participantId) {
         log.warn("Request to delete participant id={} for companyId={}", participantId, companyId);
-        participantService.delete(companyId, participantId);
+        participantMService.delete(companyId, participantId);
         return ResponseEntity.noContent().build();
     }
 

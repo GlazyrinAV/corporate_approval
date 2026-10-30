@@ -58,7 +58,7 @@ public class MeetingParticipant {
      * @see Meeting
      * @see JoinColumn
      */
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "meeting_id", nullable = false)
     private Meeting meeting;
 

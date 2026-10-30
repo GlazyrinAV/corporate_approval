@@ -66,18 +66,19 @@ public class MeetingParticipantController {
      * @return ResponseEntity containing a list of MeetingParticipantDto representing potential participants
      * with HTTP status 200 OK
      */
-    @Operation(summary = "Get potential participants", description = "Retrieves a list of potential participants for a specific meeting")
+    @Operation(summary = "Get potential participants for exciting meeting",
+            description = "Retrieves a list of potential participants for a specific meeting")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved list of potential participants")
     })
     @GetMapping("/potentials")
-    public ResponseEntity<Page<MeetingParticipantDto>> findPotentialParticipants(
+    public ResponseEntity<Page<MeetingParticipantDto>> findPotentialParticipantsForCurrentMeeting(
             @PathVariable Integer companyId,
             @PathVariable Integer meetingId,
             @RequestParam(defaultValue = "0") @Min(0) Integer page,
             @RequestParam(defaultValue = "8") @Min(1) @Max(50) Integer limit) {
         log.debug("Fetching potential participants for meeting: {}", meetingId);
-        Page<MeetingParticipantDto> potentialParticipants = meetingParticipantService.findPotential(companyId, meetingId, page, limit);
+        Page<MeetingParticipantDto> potentialParticipants = meetingParticipantService.findPotentialInCurrentMeeting(companyId, meetingId, page, limit);
         return ResponseEntity.ok(potentialParticipants);
     }
 

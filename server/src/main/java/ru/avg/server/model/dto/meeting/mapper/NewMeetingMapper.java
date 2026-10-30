@@ -8,8 +8,8 @@ import ru.avg.server.exception.participant.ParticipantNotFound;
 import ru.avg.server.model.dto.meeting.NewMeetingDto;
 import ru.avg.server.model.meeting.Meeting;
 import ru.avg.server.model.meeting.MeetingType;
-import ru.avg.server.model.participant.Participant;
 import ru.avg.server.repository.company.CompanyRepository;
+import ru.avg.server.repository.participant.MeetingParticipantRepository;
 import ru.avg.server.repository.participant.ParticipantRepository;
 
 import java.util.Arrays;
@@ -30,9 +30,9 @@ import java.util.stream.Collectors;
  * </ul>
  * </p>
  *
+ * @author AVG
  * @see NewMeetingDto
  * @see Meeting
- * @author AVG
  * @since 1.0
  */
 @Component
@@ -51,7 +51,7 @@ public class NewMeetingMapper {
      * This dependency is injected by Spring and used to assign participants to roles
      * such as chairman and secretary during the mapping process.
      */
-    private final ParticipantRepository participantRepository;
+    private final MeetingParticipantRepository meetingParticipantRepository;
 
     /**
      * A static map that associates meeting type titles (in Russian) with their corresponding
@@ -86,10 +86,9 @@ public class NewMeetingMapper {
      * @param dto the DTO containing meeting data, must not be {@code null}
      * @return a fully constructed {@link Meeting} entity with mapped values
      * @throws IllegalArgumentException if {@code dto} is {@code null}
-     * @throws MeetingTypeNotFound if the {@code type} in the DTO does not correspond to any known meeting type
-     * @throws CompanyNotFound if the {@code companyId} in the DTO does not correspond to any existing company
-     * @throws ParticipantNotFound if {@code chairmanId} or {@code secretaryId} in the DTO does not correspond to any existing participant
-     *
+     * @throws MeetingTypeNotFound      if the {@code type} in the DTO does not correspond to any known meeting type
+     * @throws CompanyNotFound          if the {@code companyId} in the DTO does not correspond to any existing company
+     * @throws ParticipantNotFound      if {@code chairmanId} or {@code secretaryId} in the DTO does not correspond to any existing participant
      * @see MeetingType
      * @see CompanyRepository#findById(Object)
      * @see ParticipantRepository#findById(Object)
@@ -98,18 +97,6 @@ public class NewMeetingMapper {
         if (dto == null) {
             throw new IllegalArgumentException("NewMeetingDto must not be null");
         }
-
-        // Resolve chairman if specified
-        Participant chairman = dto.getChairmanId() != null
-                ? participantRepository.findById(dto.getChairmanId())
-                  .orElseThrow(() -> new ParticipantNotFound(dto.getChairmanId()))
-                : null;
-
-        // Resolve secretary if specified
-        Participant secretary = dto.getSecretaryId() != null
-                ? participantRepository.findById(dto.getSecretaryId())
-                  .orElseThrow(() -> new ParticipantNotFound(dto.getSecretaryId()))
-                : null;
 
         // Map meeting type from string to enum
         MeetingType meetingType = MEETING_TYPE_MAP.get(dto.getMeetingType());
@@ -130,8 +117,6 @@ public class NewMeetingMapper {
                 .endOfRegistration(dto.getEndOfRegistration())
                 .town(dto.getTown())
                 .address(dto.getAddress())
-                .chairman(chairman)
-                .secretary(secretary)
                 .build();
     }
 }

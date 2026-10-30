@@ -1,14 +1,13 @@
 package ru.avg.server.model.meeting;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import ru.avg.server.model.company.Company;
+import ru.avg.server.model.participant.MeetingParticipant;
 import ru.avg.server.model.participant.Participant;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 /**
@@ -57,6 +56,7 @@ import java.time.LocalTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(onlyExplicitlyIncluded = true)
 public class Meeting {
 
     /**
@@ -66,6 +66,7 @@ public class Meeting {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false, updatable = false)
+    @ToString.Include
     private Integer id;
 
     /**
@@ -75,6 +76,7 @@ public class Meeting {
      */
     @ManyToOne
     @JoinColumn(name = "company_id", nullable = false)
+    @ToString.Include
     private Company company;
 
     /**
@@ -84,6 +86,7 @@ public class Meeting {
      */
     @Column(name = "type", nullable = false)
     @Enumerated(EnumType.STRING)
+    @ToString.Include
     private MeetingType type;
 
     /**
@@ -91,13 +94,15 @@ public class Meeting {
      * Cannot be null — every meeting must have a defined date.
      */
     @Column(name = "date_of_meeting", nullable = false)
-    private LocalDate dateOfMeeting;
+    @ToString.Include
+    private LocalDateTime dateOfMeeting;
 
     /**
      * The date on which the meeting protocol is created or finalized.
      * Cannot be null — a protocol date must be recorded for all meetings.
      */
     @Column(name = "date_of_protocol", nullable = false)
+    @ToString.Include
     private LocalDate dateOfProtocol;
 
     /**
@@ -105,6 +110,7 @@ public class Meeting {
      * Cannot be null — registration start time must be defined.
      */
     @Column(name = "start_of_registration", nullable = false)
+    @ToString.Include
     private LocalTime startOfRegistration;
 
     /**
@@ -112,6 +118,7 @@ public class Meeting {
      * Cannot be null — registration end time must be defined.
      */
     @Column(name = "end_of_registration", nullable = false)
+    @ToString.Include
     private LocalTime endOfRegistration;
 
     /**
@@ -119,6 +126,7 @@ public class Meeting {
      * Cannot be null — the meeting must have a defined start time.
      */
     @Column(name = "start_of_meeting", nullable = false)
+    @ToString.Include
     private LocalTime startOfMeeting;
 
     /**
@@ -126,6 +134,7 @@ public class Meeting {
      * Cannot be null — the meeting must have a defined end time.
      */
     @Column(name = "end_of_meeting", nullable = false)
+    @ToString.Include
     private LocalTime endOfMeeting;
 
     /**
@@ -133,6 +142,7 @@ public class Meeting {
      * Cannot be null — location at the town level must be specified.
      */
     @Column(name = "town", nullable = false)
+    @ToString.Include
     private String town;
 
     /**
@@ -141,6 +151,7 @@ public class Meeting {
      * Cannot be null — a location must be specified for all meetings.
      */
     @Column(name = "address", nullable = false, length = 512)
+    @ToString.Include
     private String address;
 
     /**
@@ -148,16 +159,34 @@ public class Meeting {
      * The secretary is responsible for recording minutes and official documentation.
      * This field may be null if the role has not yet been assigned.
      */
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "secretary_id")
-    private Participant secretary;
+    @EqualsAndHashCode.Exclude
+    private MeetingParticipant secretary;
 
     /**
      * Participant assigned to the role of chairman for this meeting.
      * The chairman presides over the meeting and ensures procedural compliance.
      * This field may be null if the role has not yet been assigned.
      */
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chairman_id")
-    private Participant chairman;
+    @EqualsAndHashCode.Exclude
+    private MeetingParticipant chairman;
+
+    @ToString.Include(name = "secretaryId")
+    private Integer secretaryId() {
+        if (secretary != null) {
+            return secretary.getId();
+        }
+        return null;
+    }
+
+    @ToString.Include(name = "chairmanId")
+    private Integer getChairmanId() {
+        if (chairman != null) {
+            return chairman.getId();
+        }
+        return null;
+    }
 }

@@ -3,6 +3,7 @@ package ru.avg.server.service.meeting;
 import org.springframework.data.domain.Page;
 import ru.avg.server.model.dto.meeting.MeetingDto;
 import ru.avg.server.model.dto.meeting.NewMeetingDto;
+import ru.avg.server.model.meeting.Meeting;
 import ru.avg.server.model.meeting.MeetingType;
 
 import java.time.LocalDate;
@@ -48,14 +49,11 @@ public interface MeetingService {
      * within the proper company context, preventing unauthorized cross-company modifications.
      * </p>
      *
-     * @param companyId     the ID of the company that owns the meeting; must not be null
-     * @param meetingId     the ID of the meeting to update; must not be null
-     * @param newMeetingDto the DTO containing the fields to update; nullable fields are ignored during update
      * @return the updated MeetingDto reflecting the changes in the database
      * @throws ru.avg.server.exception.company.CompanyNotFound if the specified company does not exist
      * @throws ru.avg.server.exception.meeting.MeetingNotFound if the specified meeting does not exist
      */
-    MeetingDto update(Integer companyId, Integer meetingId, NewMeetingDto newMeetingDto);
+    MeetingDto update(Meeting existingMeeting, Meeting updateSource);
 
     /**
      * Deletes a meeting identified by its ID from a specific company.

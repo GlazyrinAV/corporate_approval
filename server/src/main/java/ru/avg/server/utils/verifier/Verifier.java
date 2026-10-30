@@ -5,9 +5,11 @@ import org.springframework.stereotype.Component;
 import ru.avg.server.exception.company.CompanyNotFound;
 import ru.avg.server.exception.meeting.MeetingDoNotBelongToCompany;
 import ru.avg.server.exception.meeting.MeetingNotFound;
+import ru.avg.server.exception.participant.ParticipantNotFound;
 import ru.avg.server.model.meeting.Meeting;
 import ru.avg.server.repository.company.CompanyRepository;
 import ru.avg.server.repository.meeting.MeetingRepository;
+import ru.avg.server.repository.participant.ParticipantRepository;
 
 import java.util.Objects;
 
@@ -47,6 +49,8 @@ public class Verifier {
      * @see #verifyCompanyAndMeeting(Integer, Integer)
      */
     private final CompanyRepository companyRepository;
+
+    private final ParticipantRepository participantRepository;
 
     /**
      * Repository used to access and verify meeting entities in the persistence layer.
@@ -117,6 +121,16 @@ public class Verifier {
 
         if (!companyRepository.existsById(companyId)) {
             throw new CompanyNotFound(companyId);
+        }
+    }
+
+    public void verifyParticipant(Integer meetingId, Integer companyId, Integer participantId) {
+        if (Objects.isNull(participantId)) {
+            throw new IllegalArgumentException("Participant ID must not be null");
+        }
+
+        if (!participantRepository.existsById(participantId)) {
+            throw new ParticipantNotFound(participantId);
         }
     }
 

@@ -41,20 +41,20 @@ create table public.meeting
     id                    integer generated always as identity
         constraint meeting_pk
             primary key,
-    company_id            integer             not null
+    company_id            integer                  not null
         constraint meeting_company_id_fk
             references public.company (id) on delete cascade,
-    type                  varchar             not null
+    type                  varchar                  not null
         constraint check_type
             check (type in ('BOD', 'FMP', 'FMS')),
-    date_of_meeting       date                not null,
-    date_of_protocol      date                not null,
-    start_of_registration time with time zone not null,
-    end_of_registration   time with time zone not null,
-    start_of_meeting      time with time zone not null,
-    end_of_meeting        time with time zone not null,
-    address               varchar             not null,
-    town                  varchar(50)         not null,
+    date_of_meeting       TIMESTAMP WITH TIME ZONE not null,
+    date_of_protocol      TIMESTAMP WITH TIME ZONE not null,
+    start_of_registration time with time zone      not null,
+    end_of_registration   time with time zone      not null,
+    start_of_meeting      time with time zone      not null,
+    end_of_meeting        time with time zone      not null,
+    address               varchar                  not null,
+    town                  varchar(50)              not null,
     secretary_id          integer
         constraint meeting_participant_id_fk_2
             references public.participant (id) on DELETE cascade,
@@ -71,10 +71,11 @@ create table meeting_participant
     meeting_id     integer               not null
         constraint meeting_meeting_meeting_id_fk
             references meeting on delete cascade,
-    participant_id integer               not null unique
+    participant_id integer               not null
         constraint meeting_participant_participant_id_fk
             references participant on delete cascade,
-    is_present     boolean default false not null
+    is_present     boolean default false not null,
+    UNIQUE (meeting_id, participant_id)
 );
 
 create table topic

@@ -21,7 +21,6 @@ import ru.avg.server.utils.updater.Updater;
 import ru.avg.server.utils.verifier.Verifier;
 
 import java.time.LocalDate;
-import java.util.Objects;
 
 /**
  * Implementation of {@link MeetingService} providing business logic for managing meeting entities.
@@ -68,16 +67,6 @@ public class MeetingServiceImpl implements MeetingService {
      * @see MeetingRepository
      */
     private final MeetingRepository meetingRepository;
-
-    /**
-     * Repository for managing meeting-participant relationships.
-     * This dependency is used when clearing participants after a meeting type change,
-     * as different meeting types may have different participant requirements and rules.
-     * Injected by Spring via constructor injection.
-     *
-     * @see MeetingParticipantRepository
-     */
-    private final MeetingParticipantRepository meetingParticipantRepository;
 
     /**
      * Mapper responsible for bidirectional conversion between Meeting entities and MeetingDto objects.
@@ -141,10 +130,12 @@ public class MeetingServiceImpl implements MeetingService {
      */
     @Override
     public MeetingDto save(Integer companyId, NewMeetingDto newMeetingDto) {
-        verifier.verifyCompanyAndMeeting(companyId, null);
-        Meeting meeting = newMeetingMapper.fromDto(newMeetingDto);
-        meeting.getCompany().setId(companyId); // Ensure company ID is set in entity
-        return meetingMapper.toDto(meetingRepository.save(meeting));
+        verifier.verifyCompany(companyId);
+        Meeting newMeeting = newMeetingMapper.fromDto(newMeetingDto);
+        newMeeting.getCompany().setId(companyId); // Ensure company ID is set in entity
+        Meeting savedMeeting = meetingRepository.save(newMeeting);
+
+        return meetingMapper.toDto(savedMeeting);
     }
 
     /**
@@ -158,9 +149,6 @@ public class MeetingServiceImpl implements MeetingService {
      * different meeting types may have different participant requirements, quorum rules, or voting rights.
      * </p>
      *
-     * @param companyId     the unique identifier of the company that owns the meeting
-     * @param meetingId     the unique identifier of the meeting to update
-     * @param newMeetingDto the data transfer object containing updated values (nullable fields are ignored)
      * @return a MeetingDto representing the updated meeting
      * @throws CompanyNotFound          if the specified company does not exist
      * @throws MeetingNotFound          if no meeting exists with the given meetingId
@@ -168,21 +156,7 @@ public class MeetingServiceImpl implements MeetingService {
      * @see MeetingMapper#toDto(Meeting)
      */
     @Override
-    public MeetingDto update(Integer companyId, Integer meetingId, NewMeetingDto newMeetingDto) {
-        verifier.verifyCompanyAndMeeting(companyId, meetingId);
-
-        Meeting existingMeeting = meetingRepository.findById(meetingId)
-                .orElseThrow(() -> new MeetingNotFound(meetingId));
-
-        Meeting updateSource = newMeetingMapper.fromDto(newMeetingDto);
-        updateSource.setId(existingMeeting.getId());
-
-        // Only apply updates for non-null or non-blank fields
-        if (Objects.nonNull(updateSource.getType()) && updateSource.getType() != existingMeeting.getType()) {
-            // Clear participants when meeting type changes (different quorum/rules may apply)
-            meetingParticipantRepository.deleteByMeetingId(meetingId);
-        }
-
+    public MeetingDto update(Meeting existingMeeting, Meeting updateSource) {
         existingMeeting = updater.update(existingMeeting, updateSource);
 
         Meeting updatedMeeting = meetingRepository.save(existingMeeting);

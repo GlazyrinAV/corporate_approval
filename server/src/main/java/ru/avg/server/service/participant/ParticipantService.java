@@ -58,26 +58,7 @@ public interface ParticipantService {
      * @throws ru.avg.server.exception.participant.ParticipantNotFound     if the specified participant does not exist
      * @throws ru.avg.server.exception.participant.ParticipantAlreadyExist if updating would create a duplicate participant
      */
-    ParticipantDto update(Integer companyId, Integer participantId, NewParticipantDto newParticipantDto);
-
-    /**
-     * Deletes a participant identified by its ID from a specific company.
-     * This operation removes the participant from the system with special behavior based on usage:
-     * <ul>
-     *   <li>If the participant is not assigned to any active meetings: physically deletes the record</li>
-     *   <li>If the participant is assigned to active meetings: deactivates the participant (isActive = false) instead</li>
-     * </ul>
-     * <p>
-     * The company context is required to ensure the client has proper authorization to delete
-     * the specified participant, maintaining data security and integrity.
-     * </p>
-     *
-     * @param companyId     the ID of the company that owns the participant
-     * @param participantId the ID of the participant to delete
-     * @throws ru.avg.server.exception.company.CompanyNotFound         if the specified company does not exist
-     * @throws ru.avg.server.exception.participant.ParticipantNotFound if the specified participant does not exist
-     */
-    void delete(Integer companyId, Integer participantId);
+    ParticipantDto update(Integer companyId, Integer participantId, ParticipantDto newParticipantDto);
 
     /**
      * Finds a participant by name, company, and participant type combination.
@@ -178,4 +159,6 @@ public interface ParticipantService {
      * @see Page
      */
     Page<ParticipantDto> findByCriteria(Integer companyId, String criteria, Integer page, Integer limit);
+
+    void delete(Integer companyId, Integer participantId);
 }

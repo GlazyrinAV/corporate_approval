@@ -11,13 +11,11 @@ import ru.avg.server.exception.participant.ParticipantAlreadyExist;
 import ru.avg.server.exception.participant.ParticipantNotFound;
 import ru.avg.server.model.dto.participant.NewParticipantDto;
 import ru.avg.server.model.dto.participant.ParticipantDto;
-import ru.avg.server.model.dto.participant.mapper.MeetingParticipantMapper;
 import ru.avg.server.model.dto.participant.mapper.NewParticipantMapper;
 import ru.avg.server.model.dto.participant.mapper.ParticipantMapper;
 import ru.avg.server.model.meeting.MeetingType;
 import ru.avg.server.model.participant.Participant;
 import ru.avg.server.model.participant.ParticipantType;
-import ru.avg.server.repository.participant.MeetingParticipantRepository;
 import ru.avg.server.repository.participant.ParticipantRepository;
 import ru.avg.server.service.participant.ParticipantService;
 import ru.avg.server.utils.updater.Updater;
@@ -73,25 +71,11 @@ public class ParticipantServiceImpl implements ParticipantService {
     private final ParticipantRepository participantRepository;
 
     /**
-     * Repository for managing meeting-participant relationships.
-     * Used to check if a participant is assigned to any active meetings before deletion.
-     * Injected by Spring and used to enforce business rules around participant lifecycle.
-     */
-    private final MeetingParticipantRepository meetingParticipantRepository;
-
-    /**
      * Mapper for converting between Participant entities and ParticipantDto objects.
      * Handles bidirectional transformation for full participant representations.
      * Injected by Spring and used when returning participant data to clients.
      */
     private final ParticipantMapper participantMapper;
-
-    /**
-     * Mapper for converting between MeetingParticipant entities and MeetingParticipantDto objects.
-     * Used when checking the active status of a participant's meeting assignments.
-     * Injected by Spring and supports the delete operation logic.
-     */
-    private final MeetingParticipantMapper meetingParticipantMapper;
 
     /**
      * Mapper for converting NewParticipantDto objects to Participant entities.
@@ -164,13 +148,13 @@ public class ParticipantServiceImpl implements ParticipantService {
      */
     @Override
     @Transactional
-    public ParticipantDto update(Integer companyId, Integer participantId, NewParticipantDto newParticipantDto) {
+    public ParticipantDto update(Integer companyId, Integer participantId, ParticipantDto newParticipantDto) {
         verifier.verifyCompany(companyId);
 
         Participant existingParticipant = participantRepository.findById(participantId)
                 .orElseThrow(() -> new ParticipantNotFound(participantId));
 
-        Participant updateSource = newParticipantMapper.fromDto(newParticipantDto);
+        Participant updateSource = participantMapper.fromDto(newParticipantDto);
         Participant updatedParticipant = updater.update(existingParticipant, updateSource);
 
         // Handle type change with conflict detection
@@ -189,43 +173,6 @@ public class ParticipantServiceImpl implements ParticipantService {
         }
 
         return participantMapper.toDto(participantRepository.save(updatedParticipant));
-    }
-
-    /**
-     * Deletes a participant by its ID.
-     * <p>Behavior depends on whether the participant is assigned to active meetings:
-     * <ul>
-     *   <li>If no active meetings: physically deletes the participant record.</li>
-     *   <li>If assigned to meetings: deactivates the participant ({@code isActive = false}) instead of deletion.</li>
-     * </ul>
-     * </p>
-     *
-     * @param companyId     the ID of the company to which the participant belongs
-     * @param participantId the ID of the participant to delete
-     * @throws ParticipantNotFound if no participant exists with the given ID
-     * @see MeetingParticipantRepository#findByParticipantId(Integer)
-     */
-    @Override
-    public void delete(Integer companyId, Integer participantId) {
-        verifier.verifyCompany(companyId);
-
-        boolean hasActiveMeetings = meetingParticipantRepository.findByParticipantId(participantId).stream()
-                .map(meetingParticipantMapper::toDto)
-                .anyMatch(meetingParticipantDto -> {
-                            Participant participant = participantRepository.findById(meetingParticipantDto.getParticipant().getId())
-                                    .orElseThrow(() -> new ParticipantNotFound(meetingParticipantDto.getParticipant().getId()));
-
-                            return Boolean.TRUE.equals(participant.getIsActive());
-                        }
-                );
-        if (!hasActiveMeetings) {
-            participantRepository.deleteById(participantId);
-        } else {
-            Participant participant = participantRepository.findById(participantId)
-                    .orElseThrow(() -> new ParticipantNotFound(participantId));
-            participant.setIsActive(false);
-            participantRepository.save(participant);
-        }
     }
 
     /**
@@ -374,5 +321,12 @@ public class ParticipantServiceImpl implements ParticipantService {
         Pageable pageable = PageRequest.of(page, limit);
 
         return participantRepository.findByCriteria(companyId, criteria, pageable).map(participantMapper::toDto);
+    }
+
+    @Override
+    public void delete(Integer companyId, Integer participantId) {
+        verifier.verifyCompany(companyId);
+
+        participantRepository.deleteById(participantId);
     }
 }

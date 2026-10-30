@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,8 +15,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.avg.server.model.dto.meeting.MeetingDto;
+import ru.avg.server.model.dto.meeting.MeetingUpdateDto;
 import ru.avg.server.model.dto.meeting.NewMeetingDto;
+import ru.avg.server.model.dto.participant.MeetingParticipantDto;
+import ru.avg.server.mservice.meeting.MeetingMService;
 import ru.avg.server.service.meeting.MeetingService;
+import ru.avg.server.service.participant.MeetingParticipantService;
 
 /**
  * REST controller for managing meetings within a company context.
@@ -44,6 +49,21 @@ import ru.avg.server.service.meeting.MeetingService;
 @RequiredArgsConstructor
 @Slf4j
 public class MeetingController {
+
+    /**
+     * Service responsible for handling business logic related to meeting participant management.
+     * This dependency is injected by Spring using constructor injection (enabled by {@link RequiredArgsConstructor})
+     * and provides all necessary operations for managing the relationship between meetings and participants.
+     * <p>
+     * The service encapsulates data access, validation, and business rules, allowing this controller
+     * to focus solely on request handling, parameter binding, and response construction.
+     * </p>
+     *
+     * @see MeetingParticipantService
+     */
+    private final MeetingParticipantService meetingParticipantService;
+
+    private final MeetingMService meetingMService;
 
     /**
      * Service responsible for handling business logic related to meeting management.
@@ -135,7 +155,7 @@ public class MeetingController {
             @PathVariable Integer companyId,
             @Valid @RequestBody NewMeetingDto newMeetingDto) {
         log.info("Creating new meeting for companyId: {}: {}", companyId, newMeetingDto);
-        MeetingDto savedMeeting = meetingService.save(companyId, newMeetingDto);
+        MeetingDto savedMeeting = meetingMService.save(companyId, newMeetingDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedMeeting);
     }
 
@@ -146,7 +166,7 @@ public class MeetingController {
      *
      * @param companyId     the ID of the company to which the meeting belongs
      * @param meetingId     the ID of the meeting to update
-     * @param newMeetingDto the NewMeetingDto containing the fields to update
+     * @param updatedMeetingDto the NewMeetingDto containing the fields to update
      * @return ResponseEntity containing the updated MeetingDto with HTTP status 200 OK
      */
     @Operation(summary = "Update meeting", description = "Partially updates an existing meeting identified by its ID within the context of a company")
@@ -159,9 +179,9 @@ public class MeetingController {
     public ResponseEntity<MeetingDto> update(
             @PathVariable Integer companyId,
             @PathVariable Integer meetingId,
-            @Valid @RequestBody NewMeetingDto newMeetingDto) {
-        log.info("Updating meeting with meetingId: {} for companyId: {}: {}", meetingId, companyId, newMeetingDto);
-        MeetingDto updatedMeeting = meetingService.update(companyId, meetingId, newMeetingDto);
+            @Valid @RequestBody MeetingUpdateDto updatedMeetingDto) {
+        log.info("Updating meeting with meetingId: {} for companyId: {}: {}", meetingId, companyId, updatedMeetingDto);
+        MeetingDto updatedMeeting = meetingMService.update(companyId, meetingId, updatedMeetingDto);
         return ResponseEntity.ok(updatedMeeting);
     }
 
@@ -185,5 +205,22 @@ public class MeetingController {
         log.info("Deleting meeting with meetingId: {} for companyId: {}", meetingId, companyId);
         meetingService.delete(companyId, meetingId);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Get potential participants for new meeting",
+            description = "Retrieves a list of potential participants for new meeting")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved list of potential participants")
+    })
+    @GetMapping("/potentials")
+    public ResponseEntity<Page<MeetingParticipantDto>> findPotentialParticipantsForNewMeeting(
+            @PathVariable Integer companyId,
+            @RequestParam @NotBlank String meetingType,
+            @RequestParam(defaultValue = "0") @Min(0) Integer page,
+            @RequestParam(defaultValue = "8") @Min(1) @Max(50) Integer limit) {
+        log.debug("Fetching potential participants for new meeting for company: {}", companyId);
+        Page<MeetingParticipantDto> potentialParticipants = meetingParticipantService
+                .findPotentialInNewMeeting(companyId, meetingType, page, limit);
+        return ResponseEntity.ok(potentialParticipants);
     }
 }

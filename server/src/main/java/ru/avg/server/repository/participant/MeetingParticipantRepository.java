@@ -41,6 +41,12 @@ public interface MeetingParticipantRepository extends JpaRepository<MeetingParti
     List<MeetingParticipant> save(List<MeetingParticipant> meetingParticipants);
 
     /**
+     * @param meetingParticipant must not be {@literal null}.
+     * @return MeetingParticipant
+     */
+    MeetingParticipant  save(MeetingParticipant meetingParticipant);
+
+    /**
      * Находит всех участников, связанных с конкретной встречей.
      *
      * @param meetingId ID встречи; не должен быть null

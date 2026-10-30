@@ -1,5 +1,6 @@
 package ru.avg.server.model.dto.meeting;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -9,6 +10,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 /**
@@ -93,7 +95,8 @@ public class MeetingDto {
      */
     @NotNull(message = "Meeting date must not be null")
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    private LocalDate dateOfMeeting;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+    private LocalDateTime dateOfMeeting;
 
     /**
      * The date when the meeting protocol is signed or approved.
@@ -111,6 +114,7 @@ public class MeetingDto {
      */
     @NotNull(message = "Start Time of registration must not be null")
     @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+    @JsonFormat(pattern = "HH:mm:ss.SSS'Z'")
     private LocalTime startOfRegistration;
 
     /**
@@ -120,6 +124,7 @@ public class MeetingDto {
      */
     @NotNull(message = "End Time of registration must not be null")
     @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+    @JsonFormat(pattern = "HH:mm:ss.SSS'Z'")
     private LocalTime endOfRegistration;
 
     /**
@@ -129,6 +134,7 @@ public class MeetingDto {
      */
     @NotNull(message = "Start Time of meeting must not be null")
     @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+    @JsonFormat(pattern = "HH:mm:ss.SSS'Z'")
     private LocalTime startOfMeeting;
 
     /**
@@ -138,6 +144,7 @@ public class MeetingDto {
      */
     @NotNull(message = "End Time of meeting must not be null")
     @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+    @JsonFormat(pattern = "HH:mm:ss.SSS'Z'")
     private LocalTime endOfMeeting;
 
     /**

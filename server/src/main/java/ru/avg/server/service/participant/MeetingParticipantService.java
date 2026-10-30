@@ -22,6 +22,9 @@ public interface MeetingParticipantService {
      */
     List<MeetingParticipantDto> save(Integer companyId, Integer meetingId, List<MeetingParticipantDto> participants);
 
+    MeetingParticipantDto save(Integer companyId, Integer meetingId, MeetingParticipantDto meetingParticipantDto);
+
+
     /**
      * Retrieves all participants associated with a given meeting.
      *
@@ -41,7 +44,9 @@ public interface MeetingParticipantService {
      * @return a list of MeetingParticipantDto objects representing potential participants;
      * returns an empty list if no potential participants are available
      */
-    Page<MeetingParticipantDto> findPotential(Integer companyId, Integer meetingId, Integer page, Integer limit);
+    Page<MeetingParticipantDto> findPotentialInCurrentMeeting(Integer companyId, Integer meetingId, Integer page, Integer limit);
+
+    Page<MeetingParticipantDto> findPotentialInNewMeeting(Integer companyId, String meetingType, Integer page, Integer limit);
 
     /**
      * Retrieves a specific participant by their participant ID within the context of a meeting and company.
@@ -53,6 +58,9 @@ public interface MeetingParticipantService {
      */
     MeetingParticipantDto findByParticipantId(Integer companyId, Integer meetingId, Integer participantId);
 
+    List<MeetingParticipantDto> findAllByParticipantId(Integer companyId, Integer participantId);
+
+
     /**
      * Removes a participant from a meeting.
      *
@@ -61,4 +69,6 @@ public interface MeetingParticipantService {
      * @param meetingParticipantId the ID of the meeting participant entity to delete
      */
     void delete(Integer companyId, Integer meetingId, Integer meetingParticipantId);
+
+    void deleteByMeetingId(Integer meetingId);
 }

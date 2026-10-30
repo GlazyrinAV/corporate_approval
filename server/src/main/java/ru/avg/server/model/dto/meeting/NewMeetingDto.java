@@ -8,9 +8,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import ru.avg.server.model.dto.participant.NewMeetingParticipantDto;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 
 /**
  * Data Transfer Object for creating a new meeting in the approval system.
@@ -87,7 +90,8 @@ public class NewMeetingDto {
      */
     @NotNull(message = "Meeting date must not be null")
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    private LocalDate dateOfMeeting;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+    private LocalDateTime dateOfMeeting;
 
     /**
      * The date when the meeting protocol is signed or approved.
@@ -95,7 +99,7 @@ public class NewMeetingDto {
      * Used for official documentation and regulatory compliance purposes.
      */
     @NotNull(message = "Date of protocol must not be null")
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE, pattern = "yyyy-MM-dd'T'HH:mm:ssZ")
     private LocalDate dateOfProtocol;
 
     /**
@@ -183,4 +187,6 @@ public class NewMeetingDto {
      * </p>
      */
     private Integer chairmanId;
+
+    private List<NewMeetingParticipantDto> meetingParticipants;
 }

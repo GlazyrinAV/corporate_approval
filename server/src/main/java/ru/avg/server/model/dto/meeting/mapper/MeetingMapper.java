@@ -4,12 +4,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import ru.avg.server.exception.company.CompanyNotFound;
 import ru.avg.server.exception.meeting.MeetingTypeNotFound;
+import ru.avg.server.exception.participant.MeetingParticipantNotFound;
 import ru.avg.server.exception.participant.ParticipantNotFound;
 import ru.avg.server.model.dto.meeting.MeetingDto;
+import ru.avg.server.model.dto.meeting.MeetingUpdateDto;
 import ru.avg.server.model.meeting.Meeting;
 import ru.avg.server.model.meeting.MeetingType;
 import ru.avg.server.model.participant.Participant;
 import ru.avg.server.repository.company.CompanyRepository;
+import ru.avg.server.repository.participant.MeetingParticipantRepository;
 import ru.avg.server.repository.participant.ParticipantRepository;
 
 import java.util.Arrays;
@@ -56,7 +59,7 @@ public class MeetingMapper {
      * This dependency is injected by Spring and used to assign participants to roles
      * such as chairman and secretary during the mapping process.
      */
-    private final ParticipantRepository participantRepository;
+    private final MeetingParticipantRepository meetingParticipantRepository;
 
     /**
      * A static map that associates meeting type titles (in Russian) with their corresponding
@@ -122,11 +125,43 @@ public class MeetingMapper {
                 .company(companyRepository.findById(dto.getCompanyId())
                         .orElseThrow(() -> new CompanyNotFound(dto.getCompanyId())))
                 .chairman(dto.getChairmanId() != null ?
-                        participantRepository.findById(dto.getChairmanId())
-                        .orElseThrow(() -> new ParticipantNotFound(dto.getChairmanId())) : null)
+                        meetingParticipantRepository.findById(dto.getChairmanId())
+                                .orElseThrow(() -> new MeetingParticipantNotFound(dto.getChairmanId())) : null)
                 .secretary(dto.getSecretaryId() != null ?
-                        participantRepository.findById(dto.getSecretaryId())
-                        .orElseThrow(() -> new ParticipantNotFound(dto.getSecretaryId())) : null)
+                        meetingParticipantRepository.findById(dto.getSecretaryId())
+                                .orElseThrow(() -> new MeetingParticipantNotFound(dto.getSecretaryId())) : null)
+                .build();
+    }
+
+    public Meeting fromUpdateDto(MeetingUpdateDto dto) {
+        if (dto == null) {
+            throw new IllegalArgumentException("MeetingDto must not be null");
+        }
+
+        MeetingType type = MEETING_TYPE_MAP.get(dto.getMeetingType());
+        if (type == null) {
+            throw new MeetingTypeNotFound(dto.getMeetingType());
+        }
+
+        return Meeting.builder()
+                .id(dto.getId())
+                .type(type)
+                .dateOfMeeting(dto.getDateOfMeeting())
+                .dateOfProtocol(dto.getDateOfProtocol())
+                .startOfMeeting(dto.getStartOfMeeting())
+                .endOfMeeting(dto.getEndOfMeeting())
+                .startOfRegistration(dto.getStartOfRegistration())
+                .endOfRegistration(dto.getEndOfRegistration())
+                .town(dto.getTown())
+                .address(dto.getAddress())
+                .company(companyRepository.findById(dto.getCompanyId())
+                        .orElseThrow(() -> new CompanyNotFound(dto.getCompanyId())))
+                .chairman(dto.getChairmanId() != null ?
+                        meetingParticipantRepository.findById(dto.getChairmanId())
+                                .orElseThrow(() -> new MeetingParticipantNotFound(dto.getChairmanId())) : null)
+                .secretary(dto.getSecretaryId() != null ?
+                        meetingParticipantRepository.findById(dto.getSecretaryId())
+                                .orElseThrow(() -> new MeetingParticipantNotFound(dto.getSecretaryId())) : null)
                 .build();
     }
 

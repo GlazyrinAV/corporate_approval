@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
  * При добавлении участника к встрече также запускается создание голосований для каждой темы встречи.
  *
  * <p>Данная реализация обеспечивает изоляцию данных, ограничивая все операции конкретной
- * компанией и встречей, что гарантирует контроль доступа и поддержку мультиарендности.</p>
+ * компанией и встречей, что гарантирует контроль доступа.</p>
  *
  * @author AVG
  * @since 1.0
@@ -106,9 +106,11 @@ public class MeetingParticipantServiceImpl implements MeetingParticipantService 
         meetingParticipantRepository.deleteByMeetingId(meetingId);
 
         for (MeetingParticipantDto participant : participants) {
-            if (meetingParticipantRepository.findByMeetingIdAndParticipantId(meetingId, participant.getParticipant().getId())
+            if (meetingParticipantRepository
+                    .findByMeetingIdAndParticipantId(meetingId, participant.getParticipant().getId())
                     .isEmpty()) {
-                MeetingParticipant meetingParticipant = meetingParticipantRepository.save(meetingParticipantMapper.fromNewDto(participant));
+                MeetingParticipant meetingParticipant = meetingParticipantRepository
+                        .save(meetingParticipantMapper.fromNewDto(participant));
                 List<TopicDto> topics = topicRepository.findAllByMeetingId(meetingParticipant.getMeeting().getId())
                         .stream()
                         .map(topicMapper::toDto)
@@ -118,7 +120,20 @@ public class MeetingParticipantServiceImpl implements MeetingParticipantService 
                 }
             }
         }
-        return participants;
+        return meetingParticipantRepository.findAllByMeetingId(meetingId)
+                .stream()
+                .map(meetingParticipantMapper::toDto)
+                .toList();
+    }
+
+    @Override
+    public MeetingParticipantDto save(Integer companyId, Integer meetingId, MeetingParticipantDto meetingParticipantDto) {
+        verifier.verifyCompanyAndMeeting(companyId, meetingId);
+        verifier.verifyParticipant(companyId, meetingId, meetingParticipantDto.getParticipant().getId());
+
+        MeetingParticipant newMeetingParticipant = meetingParticipantRepository
+                .save(meetingParticipantMapper.fromDto(meetingParticipantDto));
+        return meetingParticipantMapper.toDto(newMeetingParticipant);
     }
 
     /**
@@ -139,7 +154,10 @@ public class MeetingParticipantServiceImpl implements MeetingParticipantService 
         verifier.verifyCompanyAndMeeting(companyId, meetingId);
         Pageable pageable = PageRequest.of(page, limit);
 
-        List<MeetingParticipantDto> data = meetingParticipantRepository.findAllByMeetingId(meetingId, pageable).getContent().stream().map(meetingParticipantMapper::toDto).toList();
+        List<MeetingParticipantDto> data = meetingParticipantRepository
+                .findAllByMeetingId(meetingId, pageable).getContent()
+                .stream().map(meetingParticipantMapper::toDto)
+                .toList();
         return new PageImpl<>(data, pageable, data.size());
     }
 
@@ -151,23 +169,32 @@ public class MeetingParticipantServiceImpl implements MeetingParticipantService 
      * @param meetingId ID встречи; используется для определения текущих участников и типа встречи
      * @param page      номер страницы
      * @param limit     лимит элементов на странице
-     * @return страница {@link MeetingParticipantDto}, представляющая доступных участников, еще не добавленных в встречу;
+     * @return страница {@link MeetingParticipantDto}, представляющая доступных участников, еще не добавленных во встречу;
      * возвращает пустую страницу, если потенциальные участники отсутствуют
      * @throws CompanyNotFound     если указанная компания не существует
      * @throws MeetingNotFound     если указанная встреча не существует
      * @throws MeetingTypeNotFound если тип встречи недействителен или не поддерживается
      */
     @Override
-    public Page<MeetingParticipantDto> findPotential(Integer companyId, Integer meetingId, Integer page, Integer limit) {
+    public Page<MeetingParticipantDto> findPotentialInCurrentMeeting(Integer companyId, Integer meetingId,
+                                                                     Integer page, Integer limit) {
         verifier.verifyCompanyAndMeeting(companyId, meetingId);
 
         MeetingDto meetingDto = meetingService.findById(companyId, meetingId);
 
         // Get current participant IDs as a Set for O(1) lookup
-        Set<Integer> currentParticipantIds = meetingParticipantRepository.findAllByMeetingId(meetingId).stream().map(mp -> mp.getParticipant().getId()).collect(Collectors.toSet());
+        Set<Integer> currentParticipantIds = meetingParticipantRepository.findAllByMeetingId(meetingId)
+                .stream()
+                .map(mp -> mp.getParticipant().getId())
+                .collect(Collectors.toSet());
 
         // Find meeting type
-        MeetingType meetingType = Arrays.stream(MeetingType.values()).filter(mt -> mt.getTitle().equals(meetingDto.getMeetingType())).findFirst().orElseThrow(() -> new MeetingTypeNotFound(meetingDto.getMeetingType()));
+        MeetingType meetingType = Arrays
+                .stream(MeetingType.values())
+                .filter(mt -> mt.getTitle()
+                        .equals(meetingDto.getMeetingType()))
+                .findFirst()
+                .orElseThrow(() -> new MeetingTypeNotFound(meetingDto.getMeetingType()));
 
         // Get potential participants and filter out those already in the meeting
         List<MeetingParticipantDto> allMeetingParticipants = participantService
@@ -176,7 +203,6 @@ public class MeetingParticipantServiceImpl implements MeetingParticipantService 
                 .filter(ParticipantDto::getIsActive)
                 .map(meetingParticipantMapper::fromParticipantDto)
                 .filter(dto -> !currentParticipantIds.contains(dto.getParticipant().getId()))
-                .peek(dto -> dto.setMeetingId(meetingId))
                 .toList();
 
         // Get current page from all available participants
@@ -188,6 +214,29 @@ public class MeetingParticipantServiceImpl implements MeetingParticipantService 
         return new PageImpl<>(pageContent, pageRequest, allMeetingParticipants.size());
     }
 
+    @Override
+    public Page<MeetingParticipantDto> findPotentialInNewMeeting(Integer companyId, String meetingType,
+                                                                 Integer page, Integer limit) {
+        verifier.verifyCompany(companyId);
+
+        MeetingType newMeetingType = Arrays
+                .stream(MeetingType.values())
+                .filter(mt -> mt.getTitle()
+                        .equals(meetingType))
+                .findFirst()
+                .orElseThrow(() -> new MeetingTypeNotFound(meetingType));
+
+        Pageable pageRequest = PageRequest.of(page, limit);
+        List<MeetingParticipantDto> allMeetingParticipants = participantService
+                .findAllByMeetingType(companyId, newMeetingType)
+                .stream()
+                .filter(ParticipantDto::getIsActive)
+                .map(meetingParticipantMapper::fromParticipantDto)
+                .toList();
+
+        return new PageImpl<>(allMeetingParticipants, pageRequest, allMeetingParticipants.size());
+    }
+
     /**
      * Получает конкретного участника в рамках встречи по ID участника.
      *
@@ -197,13 +246,26 @@ public class MeetingParticipantServiceImpl implements MeetingParticipantService 
      * @return соответствующий {@link MeetingParticipantDto}, если найден
      * @throws CompanyNotFound            если указанная компания не существует
      * @throws MeetingNotFound            если указанная встреча не существует
-     * @throws MeetingParticipantNotFound если участник с указанным ID не найден в встрече
+     * @throws MeetingParticipantNotFound если участник с указанным ID не найден во встрече
      */
     @Override
     public MeetingParticipantDto findByParticipantId(Integer companyId, Integer meetingId, Integer participantId) {
         verifier.verifyCompanyAndMeeting(companyId, meetingId);
 
-        return meetingParticipantRepository.findByMeetingIdAndParticipantId(meetingId, participantId).map(meetingParticipantMapper::toDto).orElseThrow(() -> new MeetingParticipantNotFound(participantId));
+        return meetingParticipantRepository
+                .findByMeetingIdAndParticipantId(meetingId, participantId)
+                .map(meetingParticipantMapper::toDto)
+                .orElse(null);
+    }
+
+    @Override
+    public List<MeetingParticipantDto> findAllByParticipantId(Integer companyId, Integer participantId) {
+        verifier.verifyCompany(companyId);
+
+        return meetingParticipantRepository.findByParticipantId(participantId)
+                .stream()
+                .map(meetingParticipantMapper::toDto)
+                .toList();
     }
 
     /**
@@ -224,5 +286,10 @@ public class MeetingParticipantServiceImpl implements MeetingParticipantService 
             throw new MeetingParticipantNotFound(meetingParticipantId);
         }
         meetingParticipantRepository.deleteById(meetingParticipantId);
+    }
+
+    @Override
+    public void deleteByMeetingId(Integer meetingId) {
+        meetingParticipantRepository.deleteByMeetingId(meetingId);
     }
 }
