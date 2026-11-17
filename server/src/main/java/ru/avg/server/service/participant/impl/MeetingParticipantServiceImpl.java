@@ -205,13 +205,7 @@ public class MeetingParticipantServiceImpl implements MeetingParticipantService 
                 .filter(dto -> !currentParticipantIds.contains(dto.getParticipant().getId()))
                 .toList();
 
-        // Get current page from all available participants
-        Pageable pageRequest = PageRequest.of(page, limit);
-        int start = Math.min(pageRequest.getPageNumber() * pageRequest.getPageSize(), allMeetingParticipants.size());
-        int end = Math.min(start + pageRequest.getPageSize(), allMeetingParticipants.size());
-        List<MeetingParticipantDto> pageContent = allMeetingParticipants.subList(start, end);
-
-        return new PageImpl<>(pageContent, pageRequest, allMeetingParticipants.size());
+        return createPage(allMeetingParticipants, page, limit);
     }
 
     @Override
@@ -226,7 +220,6 @@ public class MeetingParticipantServiceImpl implements MeetingParticipantService 
                 .findFirst()
                 .orElseThrow(() -> new MeetingTypeNotFound(meetingType));
 
-        Pageable pageRequest = PageRequest.of(page, limit);
         List<MeetingParticipantDto> allMeetingParticipants = participantService
                 .findAllByMeetingType(companyId, newMeetingType)
                 .stream()
@@ -234,7 +227,7 @@ public class MeetingParticipantServiceImpl implements MeetingParticipantService 
                 .map(meetingParticipantMapper::fromParticipantDto)
                 .toList();
 
-        return new PageImpl<>(allMeetingParticipants, pageRequest, allMeetingParticipants.size());
+        return createPage(allMeetingParticipants, page, limit);
     }
 
     /**
@@ -291,5 +284,15 @@ public class MeetingParticipantServiceImpl implements MeetingParticipantService 
     @Override
     public void deleteByMeetingId(Integer meetingId) {
         meetingParticipantRepository.deleteByMeetingId(meetingId);
+    }
+
+    private Page<MeetingParticipantDto> createPage(List<MeetingParticipantDto> participants, Integer page, Integer limit) {
+        // Get current page from all available participants
+        Pageable pageRequest = PageRequest.of(page, limit);
+        int start = Math.min(pageRequest.getPageNumber() * pageRequest.getPageSize(), participants.size());
+        int end = Math.min(start + pageRequest.getPageSize(), participants.size());
+        List<MeetingParticipantDto> pageContent = participants.subList(start, end);
+
+        return new PageImpl<>(pageContent, pageRequest, participants.size());
     }
 }

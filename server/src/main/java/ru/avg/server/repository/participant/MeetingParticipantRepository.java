@@ -1,6 +1,7 @@
 package ru.avg.server.repository.participant;
 
 
+import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -44,7 +45,7 @@ public interface MeetingParticipantRepository extends JpaRepository<MeetingParti
      * @param meetingParticipant must not be {@literal null}.
      * @return MeetingParticipant
      */
-    MeetingParticipant  save(MeetingParticipant meetingParticipant);
+    MeetingParticipant save(@NonNull MeetingParticipant meetingParticipant);
 
     /**
      * Находит всех участников, связанных с конкретной встречей.
