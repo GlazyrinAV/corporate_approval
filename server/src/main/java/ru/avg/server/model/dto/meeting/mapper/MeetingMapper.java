@@ -156,12 +156,6 @@ public class MeetingMapper {
                 .address(dto.getAddress())
                 .company(companyRepository.findById(dto.getCompanyId())
                         .orElseThrow(() -> new CompanyNotFound(dto.getCompanyId())))
-                .chairman(dto.getChairmanId() != null ?
-                        meetingParticipantRepository.findById(dto.getChairmanId())
-                                .orElseThrow(() -> new MeetingParticipantNotFound(dto.getChairmanId())) : null)
-                .secretary(dto.getSecretaryId() != null ?
-                        meetingParticipantRepository.findById(dto.getSecretaryId())
-                                .orElseThrow(() -> new MeetingParticipantNotFound(dto.getSecretaryId())) : null)
                 .build();
     }
 

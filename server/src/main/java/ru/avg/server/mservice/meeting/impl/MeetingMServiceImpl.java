@@ -76,6 +76,10 @@ public class MeetingMServiceImpl implements MeetingMService {
             meetingParticipantService.deleteByMeetingId(meetingId);
         }
 
+        updateChairman(companyId, existingMeeting, meetingDto.getChairmanId());
+
+        updateSecretary(companyId, existingMeeting, meetingDto.getSecretaryId());
+
         return meetingService.update(existingMeeting, updateSource);
     }
 
