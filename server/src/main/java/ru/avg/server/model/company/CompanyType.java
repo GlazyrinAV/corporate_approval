@@ -11,6 +11,10 @@ import lombok.Getter;
  * - LLC: Limited Liability Company (Общество с ограниченной ответственностью)
  * <p>
  * This enum is used in {@link ru.avg.server.model.company.Company} to classify organizations.
+ *
+ * @author AVG
+ * @see ru.avg.server.model.company.Company
+ * @since 1.0
  */
 @Getter
 public enum CompanyType {

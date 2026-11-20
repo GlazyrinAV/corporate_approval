@@ -12,6 +12,10 @@ import lombok.Getter;
  * - FMS: General Meeting of Shareholders (Общее собрание акционеров)
  * <p>
  * This enum is used in {@link ru.avg.server.model.meeting.Meeting} to classify meeting events.
+ *
+ * @author AVG
+ * @see ru.avg.server.model.meeting.Meeting
+ * @since 1.0
  */
 @Getter
 public enum MeetingType {

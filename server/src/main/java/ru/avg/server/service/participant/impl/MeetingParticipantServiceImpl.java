@@ -32,15 +32,20 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Реализация интерфейса {@link MeetingParticipantService}.
- * Данный сервис управляет участниками встреч, включая добавление участников,
- * получение существующих и потенциальных участников, а также удаление участников из встреч.
- * При добавлении участника к встрече также запускается создание голосований для каждой темы встречи.
- *
- * <p>Данная реализация обеспечивает изоляцию данных, ограничивая все операции конкретной
- * компанией и встречей, что гарантирует контроль доступа.</p>
+ * Implementation of the {@link MeetingParticipantService} interface.
+ * This service manages meeting participants, including adding participants,
+ * retrieving existing and potential participants, as well as removing participants from meetings.
+ * When a participant is added to a meeting, it also triggers the creation of voting records
+ * for each topic associated with the meeting.
+ * <p>
+ * This implementation ensures data isolation by restricting all operations to a specific
+ * company and meeting, thereby guaranteeing access control.
+ * </p>
  *
  * @author AVG
+ * @see MeetingParticipantService
+ * @see MeetingParticipant
+ * @see MeetingParticipantDto
  * @since 1.0
  */
 @Service
@@ -48,42 +53,85 @@ import java.util.stream.Collectors;
 public class MeetingParticipantServiceImpl implements MeetingParticipantService {
 
     /**
-     * Маппер для преобразования между сущностями {@link MeetingParticipant} и {@link MeetingParticipantDto}.
+     * Mapper for converting between {@link MeetingParticipant} entities and {@link MeetingParticipantDto} DTOs.
+     * This dependency is injected by Spring and is used throughout the service to transform
+     * data between the persistence layer and the API layer.
+     *
+     * @see MeetingParticipantMapper
+     * @see MeetingParticipant
+     * @see MeetingParticipantDto
      */
     private final MeetingParticipantMapper meetingParticipantMapper;
 
     /**
-     * Репозиторий для управления хранением сущностей {@link MeetingParticipant}.
+     * Repository for managing persistence of {@link MeetingParticipant} entities.
+     * This dependency is injected by Spring via constructor injection and provides
+     * CRUD operations and custom queries for meeting participant records.
+     *
+     * @see MeetingParticipantRepository
+     * @see MeetingParticipant
      */
     private final MeetingParticipantRepository meetingParticipantRepository;
 
     /**
-     * Репозиторий для управления темами внутри встречи; используется для получения тем при создании голосований.
+     * Repository for managing topics within meetings; used to retrieve topics when creating voting records.
+     * This dependency is injected by Spring and is primarily used in the {@link #save(Integer, Integer, List)}
+     * method to fetch all topics associated with a meeting.
+     *
+     * @see TopicRepository
+     * @see #save(Integer, Integer, List)
      */
     private final TopicRepository topicRepository;
 
     /**
-     * Маппер для преобразования {@link TopicDto} в сущность при создании голосований.
+     * Mapper for converting {@link TopicDto} to entity when creating voting records.
+     * This dependency is injected by Spring and is used to transform topic DTOs
+     * into entity objects before passing them to the voting service.
+     *
+     * @see TopicMapper
+     * @see TopicDto
      */
     private final TopicMapper topicMapper;
 
     /**
-     * Сервис для управления созданием голосований при добавлении участника к встрече.
+     * Service for managing voting record creation when a participant is added to a meeting.
+     * This dependency is injected by Spring and is used to initialize voting structures
+     * for each topic associated with a meeting when a new participant is added.
+     *
+     * @see VotingService
+     * @see #save(Integer, Integer, List)
      */
     private final VotingService votingService;
 
     /**
-     * Сервис для управления участниками на основе типа встречи; используется для поиска потенциальных участников.
+     * Service for managing participants based on meeting type; used to find potential participants.
+     * This dependency is injected by Spring and provides methods to query participants
+     * by meeting type, which is used in {@link #findPotentialInCurrentMeeting(Integer, Integer, Integer, Integer)}
+     * and {@link #findPotentialInNewMeeting(Integer, String, Integer, Integer)}.
+     *
+     * @see ParticipantService
+     * @see #findPotentialInCurrentMeeting(Integer, Integer, Integer, Integer)
+     * @see #findPotentialInNewMeeting(Integer, String, Integer, Integer)
      */
     private final ParticipantService participantService;
 
     /**
-     * Сервис для получения деталей встречи (например, типа и ID компании); используется при управлении участниками.
+     * Service for retrieving meeting details (such as type and company ID); used when managing participants.
+     * This dependency is injected by Spring and is primarily used in {@link #findPotentialInCurrentMeeting(Integer, Integer, Integer, Integer)}
+     * to fetch meeting information for determining potential participants.
+     *
+     * @see MeetingService
+     * @see #findPotentialInCurrentMeeting(Integer, Integer, Integer, Integer)
      */
     private final MeetingService meetingService;
 
     /**
-     * Утилитарный компонент для проверки существования компании и встречи, а также их корректной связи.
+     * Utility component for verifying the existence of companies and meetings, as well as their correct association.
+     * This dependency is injected by Spring and is used throughout the service to validate
+     * that operations are performed only when the specified company and meeting exist and are properly linked.
+     *
+     * @see Verifier
+     * @see #verifyCompanyAndMeeting(Integer, Integer)
      */
     private final Verifier verifier;
 
@@ -126,6 +174,22 @@ public class MeetingParticipantServiceImpl implements MeetingParticipantService 
                 .toList();
     }
 
+    /**
+     * Добавляет одного участника к встрече с проверкой принадлежности участника компании.
+     * <p>
+     * Этот метод сначала проверяет существование компании и встречи через {@link Verifier#verifyCompanyAndMeeting(Integer, Integer)},
+     * затем проверяет, что участник принадлежит указанной компании через {@link Verifier#verifyParticipant(Integer, Integer, Integer)}.
+     * После валидации создаётся новая запись о участнике встречи.
+     * </p>
+     *
+     * @param companyId             ID компании, владеющей встречей; не должно быть {@code null} и должно существовать
+     * @param meetingId             ID встречи, к которой будет добавлен участник; не должно быть {@code null} и должно существовать
+     * @param meetingParticipantDto DTO участника для добавления; не должно быть {@code null}
+     * @return сохранённый {@link MeetingParticipantDto} со сгенерированным ID
+     * @throws CompanyNotFound            если указанная компания не существует
+     * @throws MeetingNotFound            если указанная встреча не существует
+     * @throws MeetingParticipantNotFound если участник не принадлежит указанной компании
+     */
     @Override
     public MeetingParticipantDto save(Integer companyId, Integer meetingId, MeetingParticipantDto meetingParticipantDto) {
         verifier.verifyCompanyAndMeeting(companyId, meetingId);
@@ -208,6 +272,22 @@ public class MeetingParticipantServiceImpl implements MeetingParticipantService 
         return createPage(allMeetingParticipants, page, limit);
     }
 
+    /**
+     * Находит потенциальных участников для создания новой встречи указанного типа.
+     * <p>
+     * В отличие от {@link #findPotentialInCurrentMeeting(Integer, Integer, Integer, Integer)}, этот метод не фильтрует
+     * участников по текущей встрече, а возвращает всех активных участников, соответствующих указанному типу встречи.
+     * </p>
+     *
+     * @param companyId   ID компании; используется для валидации и поиска участников
+     * @param meetingType название типа встречи (из {@link MeetingType#getTitle()}); используется для фильтрации участников
+     * @param page        номер страницы
+     * @param limit       лимит элементов на странице
+     * @return страница {@link MeetingParticipantDto}, представляющая доступных участников для указанного типа встречи;
+     * возвращает пустую страницу, если потенциальные участники отсутствуют
+     * @throws CompanyNotFound     если указанная компания не существует
+     * @throws MeetingTypeNotFound если тип встречи недействителен или не поддерживается
+     */
     @Override
     public Page<MeetingParticipantDto> findPotentialInNewMeeting(Integer companyId, String meetingType,
                                                                  Integer page, Integer limit) {
@@ -251,6 +331,19 @@ public class MeetingParticipantServiceImpl implements MeetingParticipantService 
                 .orElse(null);
     }
 
+    /**
+     * Получает все встречи, в которых участвует конкретный участник.
+     * <p>
+     * Метод возвращает все записи о участии в встречах для указанного участника,
+     * с валидацией принадлежности компании.
+     * </p>
+     *
+     * @param companyId     ID компании; используется для валидации
+     * @param participantId ID участника для поиска
+     * @return список {@link MeetingParticipantDto}, представляющий все встречи участника;
+     * возвращает пустой список, если участник не найден
+     * @throws CompanyNotFound если указанная компания не существует
+     */
     @Override
     public List<MeetingParticipantDto> findAllByParticipantId(Integer companyId, Integer participantId) {
         verifier.verifyCompany(companyId);
@@ -281,11 +374,38 @@ public class MeetingParticipantServiceImpl implements MeetingParticipantService 
         meetingParticipantRepository.deleteById(meetingParticipantId);
     }
 
+    /**
+     * Удаляет всех участников, связанных с конкретной встречей.
+     * <p>
+     * Этот метод выполняет каскадное удаление всех записей {@link MeetingParticipant},
+     * связанных с указанной встречей. Используется при удалении встречи или очистке
+     * её состава участников.
+     * </p>
+     *
+     * @param meetingId ID встречи, для которой необходимо удалить всех участников
+     * @throws MeetingNotFound если указанная встреча не существует
+     */
     @Override
     public void deleteByMeetingId(Integer meetingId) {
         meetingParticipantRepository.deleteByMeetingId(meetingId);
     }
 
+    /**
+     * Создаёт страницу результатов с поддержкой пагинации для списка участников.
+     * <p>
+     * Этот приватный метод инкапсулирует логику вычисления индексов начала и конца страницы,
+     * извлечения под списка и создания объекта {@link PageImpl}. Используется в методах
+     * {@link #findPotentialInCurrentMeeting(Integer, Integer, Integer, Integer)} и
+     * {@link #findPotentialInNewMeeting(Integer, String, Integer, Integer)} для устранения
+     * дублирования кода пагинации.
+     * </p>
+     *
+     * @param participants список всех участников для пагинации; не должен быть {@code null}
+     * @param page         номер страницы (с нуля)
+     * @param limit        максимальное количество элементов на странице
+     * @return страница {@link MeetingParticipantDto} с элементами текущей страницы,
+     * общим количеством элементов и параметрами пагинации
+     */
     private Page<MeetingParticipantDto> createPage(List<MeetingParticipantDto> participants, Integer page, Integer limit) {
         // Get current page from all available participants
         Pageable pageRequest = PageRequest.of(page, limit);
